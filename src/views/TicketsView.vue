@@ -1,5 +1,9 @@
+<script setup lang="ts">
+import AppNavigation from '@/components/Layout/AppNavigation.vue'
+import TicketContent from '@/components/tickets/TicketContent.vue'
+</script>
+
 <template>
-  <div>
-    <h1>Tickets</h1>
-  </div>
+  <AppNavigation />
+  <TicketContent />
 </template>

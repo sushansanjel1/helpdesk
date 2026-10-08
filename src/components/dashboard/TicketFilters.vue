@@ -6,7 +6,7 @@ const selectedPriority = ref('low')
 </script>
 
 <template>
-  <div class="px-6 py-4 flex justify-evenly border-2 border-white">
+  <div class="px-6 py-4 flex justify-evenly border-2 border-slate-200 rounded-lg">
     <h1>Search Tickets</h1>
 
     <div>
@@ -15,6 +15,7 @@ const selectedPriority = ref('low')
         <option value="progress">Progress</option>
         <option value="open">Open</option>
         <option value="resolved">Resolved</option>
+        <option value="closed">Closed</option>
       </select>
     </div>
 
@@ -24,6 +25,7 @@ const selectedPriority = ref('low')
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
+        <option value="urgent">Urgent</option>
       </select>
     </div>
   </div>

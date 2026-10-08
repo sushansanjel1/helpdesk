@@ -61,7 +61,7 @@ const handleLogin = () => {
 
         <button
           type="submit"
-          class="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          class="w-full rounded-md bg-gray-800 px-4 py-2 font-medium text-white hover:bg-gray-950"
         >
           Login
         </button>
