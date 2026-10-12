@@ -1,50 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { useTicketStore } from '@/stores/ticket'
 
-const tickets = ref([
-  {
-    id: 1024,
-    subject: 'Payment Failed',
-    customer: 'John',
-    priority: 'High',
-    status: 'Progress',
-  },
-  {
-    id: 1022,
-    subject: 'Login Problem',
-    customer: 'Mike',
-    priority: 'High',
-    status: 'Progress',
-  },
-  {
-    id: 1019,
-    subject: 'Refund Request',
-    customer: 'Anna',
-    priority: 'Low',
-    status: 'Resolved',
-  },
-  {
-    id: 1019,
-    subject: 'Refund Request',
-    customer: 'Anna',
-    priority: 'Low',
-    status: 'Resolved',
-  },
-  {
-    id: 1019,
-    subject: 'Refund Request',
-    customer: 'Anna',
-    priority: 'Low',
-    status: 'Resolved',
-  },
-  {
-    id: 1019,
-    subject: 'Refund Request',
-    customer: 'Anna',
-    priority: 'Low',
-    status: 'Resolved',
-  },
-])
+const ticketStore = useTicketStore()
+const tickets = ticketStore.tickets
 </script>
 
 <!-- <template>
@@ -106,7 +64,7 @@ const tickets = ref([
           </td>
 
           <td class="px-6 py-4 text-slate-600">
-            {{ ticket.customer }}
+            {{ ticket.assignee }}
           </td>
 
           <td class="px-6 py-4 text-slate-600">

@@ -64,19 +64,22 @@ const handleTicketCreated = (ticket: Ticket) => {
 </template> -->
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { Ticket } from '@/types/ticket'
 import CreateTicketModal from './CreateTicketModal.vue'
+
+//Pinia Ticket Store
+import { useTicketStore } from '@/stores/ticket.ts'
+const ticketStore = useTicketStore()
+const tickets = ticketStore.tickets
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-const tickets = ref<Ticket[]>([])
-
-const totalNoOfTickets = computed(() => tickets.value.length)
+const totalNoOfTickets = computed(() => tickets.length)
 
 const handleTicketCreated = (ticket: Ticket) => {
-  tickets.value.unshift(ticket)
+  ticketStore.addTicket(ticket)
 }
 
 const getPriorityVariant = (priority: string) => {
