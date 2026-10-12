@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import StatCard from './StatCard.vue'
-const assignedTicketsValue = ref(12)
-const inProgressTicketsValue = ref(5)
-const urgentTicketsValue = ref(2)
-const resolvedTicketsValue = ref(24)
+import { computed } from 'vue'
+import { useTicketStore } from '@/stores/ticket.ts'
+
+const ticketStore = useTicketStore()
+
+const assignedTicketsValue = computed(
+  () => ticketStore.tickets.filter((ticket) => ticket.assignee !== null).length,
+)
+
+const inProgressTicketsValue = computed(
+  () => ticketStore.tickets.filter((ticket) => ticket.status === 'in-progress').length,
+)
+const urgentTicketsValue = computed(
+  () => ticketStore.tickets.filter((ticket) => ticket.priority.toLowerCase() === 'urgent').length,
+)
+const resolvedTicketsValue = computed(
+  () => ticketStore.tickets.filter((ticket) => ticket.status === 'resolved').length,
+)
 </script>
 
 <template>
