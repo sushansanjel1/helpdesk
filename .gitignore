@@ -40,3 +40,8 @@ __screenshots__/
 
 # Temporary files
 src/TEMP/
+
+# Environment variables
+.env
+.env.*
+!.env.example

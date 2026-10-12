@@ -1,32 +1,53 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const selectedStatus = ref('open')
-const selectedPriority = ref('low')
+import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '../ui/select'
+import { Card, CardTitle, CardHeader, CardContent } from '../ui/card'
+import { Field, FieldGroup, FieldLabel } from '../ui/field'
+import { Input } from '../ui/input'
+
+const searchQuery = ref('')
+const selectedStatus = ref('')
+const selectedPriority = ref('')
 </script>
 
 <template>
-  <div class="px-6 py-4 flex justify-evenly border-2 border-slate-200 rounded-lg">
-    <h1>Search Tickets</h1>
-
-    <div>
-      <label for="status">Status: </label>
-      <select name="status" id="status" v-model="selectedStatus">
-        <option value="progress">Progress</option>
-        <option value="open">Open</option>
-        <option value="resolved">Resolved</option>
-        <option value="closed">Closed</option>
-      </select>
-    </div>
-
-    <div>
-      <label for="priority">Priority: </label>
-      <select name="priority" id="priority" v-model="selectedPriority">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-        <option value="urgent">Urgent</option>
-      </select>
-    </div>
-  </div>
+  <Card>
+    <CardHeader>
+      <CardTitle>Search Tickets</CardTitle>
+    </CardHeader>
+    <CardContent class="space-y-4">
+      <Input v-model="searchQuery" placeholder="Search by subject or ticket ID..." />
+      <FieldGroup class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field>
+          <FieldLabel>Status</FieldLabel>
+          <Select name="status" id="status" v-model="selectedStatus">
+            <SelectTrigger>
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="progress"> In Progress</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel>Priority</FieldLabel>
+          <Select name="priority" id="priority" v-model="selectedPriority">
+            <SelectTrigger>
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      </FieldGroup>
+    </CardContent>
+  </Card>
 </template>
