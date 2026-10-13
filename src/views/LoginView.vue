@@ -1,71 +1,76 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const email = ref('')
 const password = ref('')
+const errorMessage = ref('')
 
 const handleLogin = () => {
   console.log('Email: ', email.value)
-  console.log('Passowrd: ', password.value)
+  console.log('Password: ', password.value)
+
+  if (email.value === 'admin@gmail.com' && password.value === 'admin') {
+    console.log('Login successful')
+    router.push('/dashboard')
+  } else {
+    console.log('Invalid email or password')
+    errorMessage.value = 'Invalid email or password.'
+  }
 }
 </script>
 
-<!-- <template>
-  <div>
-    <h1>LOGIN PAGE</h1>
-    <form action="">
-      <input v-model="email" placeholder="jack@gmail.com" />
-
-      <input v-model="password" placeholder="*******" />
-    </form>
-  </div>
-</template> -->
-
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-      <h1 class="mb-6 text-center text-2xl font-bold text-gray-900">Login</h1>
+  <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+    <Card class="w-full max-w-md">
+      <CardHeader>
+        <CardTitle class="text-center text-2xl"> Login </CardTitle>
+      </CardHeader>
 
-      <form @submit.prevent="handleLogin">
-        <!-- Email Input Section -->
-        <div>
-          <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email: </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            v-model="email"
-            placeholder="jack@gmail.com"
-            class="w-full rounded-md border border-gray-300 px-4 py-2"
-            required
-          />
-        </div>
+      <CardContent>
+        <form @submit.prevent="handleLogin" class="space-y-5">
+          <!-- Email -->
+          <div class="space-y-2">
+            <Label for="email">Email</Label>
 
-        <!-- Passoword Input Section  -->
-        <div>
-          <label for="password" class="mb-1 block text-sm font-medium text-gray-700"
-            >Password:
-          </label>
-          <input
-            v-model="password"
-            name="password"
-            id="password"
-            type="password"
-            placeholder="*******"
-            class="w-full mb-2 rounded-md border border-gray-300 px-4 py-2"
-            required
-          />
-        </div>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              v-model="email"
+              placeholder="jack@gmail.com"
+              required
+            />
+          </div>
 
-        <!-- Login Button  -->
+          <!-- Password -->
+          <div class="space-y-2">
+            <Label for="password">Password</Label>
 
-        <button
-          type="submit"
-          class="w-full rounded-md bg-gray-800 px-4 py-2 font-medium text-white hover:bg-gray-950"
-        >
-          Login
-        </button>
-      </form>
-    </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              v-model="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <!-- Login Button -->
+          <Button type="submit" class="w-full"> Login </Button>
+        </form>
+        <p v-if="errorMessage" class="text-sm text-destructive">
+          {{ errorMessage }}
+        </p>
+      </CardContent>
+    </Card>
   </div>
 </template>

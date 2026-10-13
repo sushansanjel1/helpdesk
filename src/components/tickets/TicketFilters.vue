@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '../ui/select'
 import { Card, CardTitle, CardHeader, CardContent } from '../ui/card'
@@ -9,6 +9,27 @@ import { Input } from '../ui/input'
 const searchQuery = ref('')
 const selectedStatus = ref('')
 const selectedPriority = ref('')
+
+const emit = defineEmits<{
+  (
+    event: 'filter-change',
+    filters: {
+      searchQuery: string
+      selectedStatus: string
+      selectedPriority: string
+    },
+  ): void
+}>()
+
+const emitFilters = () => {
+  emit('filter-change', {
+    searchQuery: searchQuery.value,
+    selectedStatus: selectedStatus.value,
+    selectedPriority: selectedPriority.value,
+  })
+}
+
+watch([searchQuery, selectedStatus, selectedPriority], emitFilters)
 </script>
 
 <template>
@@ -26,7 +47,7 @@ const selectedPriority = ref('')
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="progress"> In Progress</SelectItem>
+              <SelectItem value="in-progress"> In Progress</SelectItem>
               <SelectItem value="open">Open</SelectItem>
               <SelectItem value="resolved">Resolved</SelectItem>
               <SelectItem value="closed">Closed</SelectItem>
