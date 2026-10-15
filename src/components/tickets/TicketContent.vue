@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@/components/ui'
 import type { Ticket } from '@/types/ticket'
 import CreateTicketModal from './CreateTicketModal.vue'
 import TicketFilters from './TicketFilters.vue'
@@ -7,15 +8,16 @@ import TicketFilters from './TicketFilters.vue'
 //Pinia Ticket Store
 import { useTicketStore } from '@/stores/ticket.ts'
 const ticketStore = useTicketStore()
+
+onMounted(() => {
+  ticketStore.fetchTicket()
+})
 const tickets = ticketStore.tickets
 
 //To hold the current filter values
 const searchQuery = ref('')
 const selectedStatus = ref('')
 const selectedPriority = ref('')
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 const totalNoOfTickets = computed(() => tickets.length)
 

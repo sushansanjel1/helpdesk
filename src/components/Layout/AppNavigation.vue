@@ -1,29 +1,31 @@
-<!-- <script setup lang="ts">
-import { ref } from 'vue'
-
-const user = ref('Admin')
-</script>
-
-<template>
-  <div class="flex justify-evenly py-4 bg-gray-800 text-white font-bold">
-    <div class="w-1/2 flex justify-between">
-      <p>HelpDesk</p>
-      <a href="">Dashboard</a>
-
-      <a href="">Tickets</a>
-      <a href="">Customers</a>
-    </div>
-
-    <div>
-      <p>{{ user }}</p>
-    </div>
-  </div>
-</template> -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabase'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+  Button,
+} from '../ui'
 
 const user = ref('Admin')
+const router = useRouter()
+
+//logout function
+const handleLogout = async () => {
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    console.error('Logout failed:', error.message)
+    return
+  }
+
+  await router.push('/login')
+}
 </script>
 
 <template>
@@ -49,11 +51,25 @@ const user = ref('Admin')
 
     <!-- Right side -->
     <div class="flex items-center gap-3">
-      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-600">
-        {{ user.charAt(0) }}
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="outline"
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-600"
+          >
+            {{ user.charAt(0) }}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem @select="handleLogout">Log Out</DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <p class="text-lg font-medium">{{ user }}</p>
+      <!-- <button class="text-lg font-medium">{{ user }}</button> -->
     </div>
   </header>
 </template>

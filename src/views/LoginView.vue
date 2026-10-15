@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useRouter } from 'vue-router'
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { supabase } from '@/lib/supabase'
 
 const router = useRouter()
 
@@ -13,17 +10,20 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 
-const handleLogin = () => {
-  console.log('Email: ', email.value)
-  console.log('Password: ', password.value)
+const handleLogin = async () => {
+  errorMessage.value = ''
 
-  if (email.value === 'admin@gmail.com' && password.value === 'admin') {
-    console.log('Login successful')
-    router.push('/dashboard')
-  } else {
-    console.log('Invalid email or password')
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  })
+
+  if (error) {
     errorMessage.value = 'Invalid email or password.'
+    return
   }
+
+  await router.push('/dashboard')
 }
 </script>
 

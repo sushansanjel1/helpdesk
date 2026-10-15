@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-
-import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '../ui/select'
-import { Card, CardTitle, CardHeader, CardContent } from '../ui/card'
-import { Field, FieldGroup, FieldLabel } from '../ui/field'
-import { Input } from '../ui/input'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+  SelectContent,
+  Card,
+  CardTitle,
+  CardHeader,
+  CardContent,
+  Field,
+  FieldGroup,
+  FieldLabel,
+  Input,
+  Button,
+} from '@/components/ui'
 
 const searchQuery = ref('')
 const selectedStatus = ref('')
@@ -28,6 +39,11 @@ const emitFilters = () => {
     selectedPriority: selectedPriority.value,
   })
 }
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedStatus.value = ''
+  selectedPriority.value = ''
+}
 
 watch([searchQuery, selectedStatus, selectedPriority], emitFilters)
 </script>
@@ -39,6 +55,7 @@ watch([searchQuery, selectedStatus, selectedPriority], emitFilters)
     </CardHeader>
     <CardContent class="space-y-4">
       <Input v-model="searchQuery" placeholder="Search by subject or ticket ID..." />
+      <Button variant="outline" @click="clearFilters"> Clear filters </Button>
       <FieldGroup class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field>
           <FieldLabel>Status</FieldLabel>

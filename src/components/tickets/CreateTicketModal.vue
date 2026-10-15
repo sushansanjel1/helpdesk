@@ -2,18 +2,15 @@
 import { ref } from 'vue'
 
 //Shadcn imports
-import { Button } from '../ui/button/index.ts'
-import { Input } from '../ui/input/index.ts'
-import { Textarea } from '../ui/textarea/index.ts'
 import {
+  Button,
+  Input,
+  Textarea,
   Select,
   SelectTrigger,
   SelectValue,
   SelectItem,
   SelectContent,
-} from '../ui/select/index.ts'
-
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -22,9 +19,10 @@ import {
   DialogTrigger,
   DialogClose,
   DialogFooter,
-} from '@/components/ui/dialog'
-
-import { Field, FieldLabel, FieldGroup } from '../ui/field/index.ts'
+  Field,
+  FieldLabel,
+  FieldGroup,
+} from '@/components/ui'
 
 //storing values from modal
 const subject = ref('')
