@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import StatCard from './StatCard.vue'
 import { computed } from 'vue'
-import { useTicketStore } from '@/stores/ticket.ts'
+import { useTickets } from '@/composable/ticket.ts'
 
-const ticketStore = useTicketStore()
+const { tickets, fetchTickets } = useTickets()
+fetchTickets()
 
 const assignedTicketsValue = computed(
-  () => ticketStore.tickets.filter((ticket) => ticket.assignee !== null).length,
+  () => tickets.value.filter((ticket) => ticket.assignee !== null).length,
 )
 
 const inProgressTicketsValue = computed(
-  () => ticketStore.tickets.filter((ticket) => ticket.status === 'in-progress').length,
+  () => tickets.value.filter((ticket) => ticket.status === 'in-progress').length,
 )
 const urgentTicketsValue = computed(
-  () => ticketStore.tickets.filter((ticket) => ticket.priority.toLowerCase() === 'urgent').length,
+  () => tickets.value.filter((ticket) => ticket.priority.toLowerCase() === 'urgent').length,
 )
 const resolvedTicketsValue = computed(
-  () => ticketStore.tickets.filter((ticket) => ticket.status === 'resolved').length,
+  () => tickets.value.filter((ticket) => ticket.status === 'resolved').length,
 )
 </script>
 

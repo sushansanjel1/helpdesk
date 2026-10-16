@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useTicketStore } from '@/stores/ticket'
 import type { Ticket } from '@/types/ticket'
+import { useTickets } from '@/composable/ticket'
 
 import {
   Badge,
@@ -12,8 +12,8 @@ import {
   TableCell,
 } from '@/components/ui'
 
-const ticketStore = useTicketStore()
-const tickets = ticketStore.tickets
+const { tickets, fetchTickets } = useTickets()
+fetchTickets()
 
 function getStatusVariant(status: Ticket['status']) {
   switch (status) {

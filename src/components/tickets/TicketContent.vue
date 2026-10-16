@@ -1,28 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@/components/ui'
 import type { Ticket } from '@/types/ticket'
+import { useTickets } from '@/composable/ticket.ts'
 import CreateTicketModal from './CreateTicketModal.vue'
 import TicketFilters from './TicketFilters.vue'
 
-//Pinia Ticket Store
-import { useTicketStore } from '@/stores/ticket.ts'
-const ticketStore = useTicketStore()
-
-onMounted(() => {
-  ticketStore.fetchTicket()
-})
-const tickets = ticketStore.tickets
+//Fetching Tickets from composable(ticket.ts)
+const { tickets, addTicket, fetchTickets } = useTickets()
+fetchTickets()
 
 //To hold the current filter values
 const searchQuery = ref('')
 const selectedStatus = ref('')
 const selectedPriority = ref('')
 
-const totalNoOfTickets = computed(() => tickets.length)
+const totalNoOfTickets = computed(() => tickets.value.length)
 
 const handleTicketCreated = (ticket: Ticket) => {
-  ticketStore.addTicket(ticket)
+  addTicket(ticket)
 }
 
 const handleFilterChange = (filters: {
@@ -36,7 +32,7 @@ const handleFilterChange = (filters: {
 }
 
 const filteredTickets = computed(() => {
-  return tickets.filter((ticket) => {
+  return tickets.value.filter((ticket) => {
     //Filtering logic
     const query = searchQuery.value.toLowerCase().trim()
 
