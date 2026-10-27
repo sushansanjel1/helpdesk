@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import {
@@ -26,6 +26,10 @@ const handleLogout = async () => {
 
   await router.push('/login')
 }
+
+// onMounted(() => {
+//   console.log('navbar mounted')
+// })
 </script>
 
 <template>
