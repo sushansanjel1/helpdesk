@@ -17,8 +17,8 @@ const selectedPriority = ref('')
 
 const totalNoOfTickets = computed(() => tickets.value.length)
 
-const handleTicketCreated = (ticket: Ticket) => {
-  addTicket(ticket)
+const handleSaveTicket = async (ticket: Ticket): Promise<Ticket | null> => {
+  return await addTicket(ticket)
 }
 
 const handleFilterChange = (filters: {
@@ -73,7 +73,7 @@ const getPriorityVariant = (priority: string) => {
         </p>
       </div>
 
-      <CreateTicketModal @ticket-created="handleTicketCreated" />
+      <CreateTicketModal :save-ticket="handleSaveTicket" />
     </div>
     <section class="container mx-auto space-y-4 px-10 py-8">
       <TicketFilters @filter-change="handleFilterChange" />

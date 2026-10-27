@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { Ticket } from '@/types/ticket'
 
 //Shadcn imports
 import {
@@ -31,14 +32,16 @@ const category = ref('')
 const priority = ref('')
 const type = ref('')
 
-//emit
-import type { Ticket } from '@/types/ticket.ts'
-const emit = defineEmits<{
-  (event: 'ticket-created', ticket: Ticket): void
+// Save function provided by the parent component
+const props = defineProps<{
+  saveTicket: (ticket: Ticket) => Promise<Ticket | null>
 }>()
 
-//Handle Create Ticket Form
-const createTicket = () => {
+// Control whether the dialog is open
+const isDialogOpen = ref(false)
+
+// Handle Create Ticket Form
+const createTicket = async () => {
   const newTicket: Ticket = {
     id: Date.now(),
     subject: subject.value.trim(),
@@ -50,19 +53,28 @@ const createTicket = () => {
     assignee: null,
     createdAt: new Date().toISOString(),
   }
-  emit('ticket-created', newTicket)
 
-  //Reset the form after successful submission
+  const savedTicket = await props.saveTicket(newTicket)
+
+  // Stop if saving failed; keep the form values
+  if (!savedTicket) {
+    return
+  }
+
+  // Reset only after successful saving
   subject.value = ''
   description.value = ''
   category.value = ''
   priority.value = ''
   type.value = ''
+
+  // Close the dialog after successful saving
+  isDialogOpen.value = false
 }
 </script>
 
 <template>
-  <Dialog>
+  <Dialog v-model:open="isDialogOpen">
     <DialogTrigger as-child>
       <Button class="rounded-full"> +New Ticket </Button>
     </DialogTrigger>
@@ -149,6 +161,7 @@ const createTicket = () => {
               <DialogClose as-child>
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>
+
               <Button type="submit">Create Ticket</Button>
             </Field>
           </DialogFooter>

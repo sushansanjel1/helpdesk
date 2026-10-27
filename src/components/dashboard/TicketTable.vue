@@ -60,11 +60,11 @@ function getPriorityVariant(priority: string) {
           <TableRow v-for="ticket in tickets" :key="ticket.id">
             <TableCell class="font-medium text-muted-foreground"> #{{ ticket.id }} </TableCell>
 
-            <TableCell class="max-w-[240px] truncate font-medium">
+            <TableCell class="max-w-60 truncate font-medium">
               {{ ticket.subject }}
             </TableCell>
 
-            <TableCell class="max-w-[180px] truncate">
+            <TableCell class="max-w-45 truncate">
               {{ ticket.assignee ?? 'Unassigned' }}
             </TableCell>
 
