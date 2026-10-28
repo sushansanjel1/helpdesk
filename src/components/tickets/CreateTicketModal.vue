@@ -25,12 +25,18 @@ import {
   FieldGroup,
 } from '@/components/ui'
 
+import { LoaderCircle } from 'lucide-vue-next'
+
 //storing values from modal
 const subject = ref('')
 const description = ref('')
 const category = ref('')
 const priority = ref('')
 const type = ref('')
+
+//saving and error state
+const isSaving = ref(false)
+// const errorMessage = ref('')
 
 // Save function provided by the parent component
 const props = defineProps<{
@@ -42,34 +48,40 @@ const isDialogOpen = ref(false)
 
 // Handle Create Ticket Form
 const createTicket = async () => {
-  const newTicket: Ticket = {
-    id: Date.now(),
-    subject: subject.value.trim(),
-    description: description.value.trim(),
-    category: category.value,
-    priority: priority.value,
-    type: type.value,
-    status: 'open',
-    assignee: null,
-    createdAt: new Date().toISOString(),
+  if (isSaving.value) return
+
+  isSaving.value = true
+
+  try {
+    const newTicket: Ticket = {
+      id: Date.now(),
+      subject: subject.value.trim(),
+      description: description.value.trim(),
+      category: category.value,
+      priority: priority.value,
+      type: type.value,
+      status: 'open',
+      assignee: null,
+      createdAt: new Date().toISOString(),
+    }
+
+    const savedTicket = await props.saveTicket(newTicket)
+
+    if (!savedTicket) return
+
+    // Reset the form after successful saving
+    subject.value = ''
+    description.value = ''
+    category.value = ''
+    priority.value = ''
+    type.value = ''
+
+    isDialogOpen.value = false
+  } catch (error) {
+    console.error('Failed to create ticket:', error)
+  } finally {
+    isSaving.value = false
   }
-
-  const savedTicket = await props.saveTicket(newTicket)
-
-  // Stop if saving failed; keep the form values
-  if (!savedTicket) {
-    return
-  }
-
-  // Reset only after successful saving
-  subject.value = ''
-  description.value = ''
-  category.value = ''
-  priority.value = ''
-  type.value = ''
-
-  // Close the dialog after successful saving
-  isDialogOpen.value = false
 }
 </script>
 
@@ -162,7 +174,10 @@ const createTicket = async () => {
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>
 
-              <Button type="submit">Create Ticket</Button>
+              <Button type="submit" :disabled="isSaving">
+                <LoaderCircle v-if="isSaving" class="mr-2 size-4 animate-spin" />
+                {{ isSaving ? 'Creating...' : 'Create Ticket' }}
+              </Button>
             </Field>
           </DialogFooter>
         </FieldGroup>
