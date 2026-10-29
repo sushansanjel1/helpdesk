@@ -31,14 +31,31 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <!-- Mobile menu button -->
+  <!-- Mobile menu button
   <button
     class="fixed left-4 top-4 z-20 rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm lg:hidden"
     aria-label="Open navigation menu"
     @click="isMobileMenuOpen = true"
   >
     <Menu :size="22" />
-  </button>
+  </button> -->
+
+  <!-- Mobile sticky top bar -->
+  <header
+    class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 lg:hidden"
+  >
+    <button
+      class="rounded-lg p-2 text-slate-700 transition hover:bg-slate-100"
+      aria-label="Open navigation menu"
+      @click="isMobileMenuOpen = true"
+    >
+      <Menu :size="22" />
+    </button>
+    <div class="flex items-center gap-2">
+      <Headset :size="20" class="text-blue-600" />
+      <span class="font-semibold tracking-tight text-slate-900">HelpDesk</span>
+    </div>
+  </header>
 
   <!-- Mobile backdrop -->
   <button

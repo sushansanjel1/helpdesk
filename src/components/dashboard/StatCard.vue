@@ -28,7 +28,7 @@ const props = defineProps<{
         </p>
 
         <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">
-          {{ value }}
+          {{ props.value }}
         </p>
       </div>
 
