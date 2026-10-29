@@ -3,27 +3,33 @@ import { supabase } from '@/lib/supabase.ts'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+
   routes: [
     {
       path: '/',
-      redirect: '/login',
+      component: () => import('../layouts/AppLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          redirect: '/login',
+        },
+        {
+          path: 'dashboard',
+          name: 'dashboard',
+          component: () => import('../views/DashboardView.vue'), //lazy loading
+        },
+        {
+          path: 'tickets',
+          name: 'tickets',
+          component: () => import('../views/TicketsView.vue'),
+        },
+      ],
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LoginView.vue'), //lazy loading
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('../views/DashboardView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tickets',
-      name: 'tickets',
-      component: () => import('../views/TicketsView.vue'),
-      meta: { requiresAuth: true },
+      component: () => import('../views/LoginView.vue'),
     },
   ],
 })
