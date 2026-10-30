@@ -12,8 +12,7 @@ import {
   TableCell,
 } from '@/components/ui'
 
-const { tickets, fetchTickets } = useTickets()
-fetchTickets()
+const { tickets } = useTickets()
 
 function getStatusVariant(status: Ticket['status']) {
   switch (status) {
@@ -41,56 +40,6 @@ function getPriorityVariant(priority: string) {
   }
 }
 </script>
-
-<!-- <template>
-  <div class="mx-auto mt-6 w-full max-w-7xl rounded-lg border bg-background shadow-sm">
-    <div class="overflow-x-auto">
-      <Table class="min-w-162.5">
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-24">ID</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          <TableRow v-for="ticket in tickets" :key="ticket.id">
-            <TableCell class="font-medium text-muted-foreground"> #{{ ticket.id }} </TableCell>
-
-            <TableCell class="max-w-60 truncate font-medium">
-              {{ ticket.subject }}
-            </TableCell>
-
-            <TableCell class="max-w-45 truncate">
-              {{ ticket.assignee ?? 'Unassigned' }}
-            </TableCell>
-
-            <TableCell>
-              <Badge :variant="getPriorityVariant(ticket.priority)">
-                {{ ticket.priority }}
-              </Badge>
-            </TableCell>
-
-            <TableCell>
-              <Badge :variant="getStatusVariant(ticket.status)">
-                {{ ticket.status.replace('-', ' ') }}
-              </Badge>
-            </TableCell>
-          </TableRow>
-
-          <TableRow v-if="tickets.length === 0">
-            <TableCell colspan="5" class="h-24 text-center text-muted-foreground">
-              No tickets found.
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
-  </div>
-</template> -->
 
 <template>
   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
