@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@/components/ui'
 import type { Ticket } from '@/types/ticket'
 import { useTickets } from '@/composable/ticket.ts'
 import CreateTicketModal from '@/components/tickets/CreateTicketModal.vue'
 import TicketFilters from '@/components/tickets/TicketFilters.vue'
+import { RouterLink } from 'vue-router'
 
 //Fetching Tickets from composable(ticket.ts)
-const { tickets, addTicket } = useTickets()
+const { tickets, addTicket, fetchTickets } = useTickets()
 
 //To hold the current filter values
 const searchQuery = ref('')
@@ -58,6 +59,10 @@ const getPriorityVariant = (priority: string) => {
 
   return 'outline'
 }
+
+onMounted(() => {
+  fetchTickets()
+})
 </script>
 
 <template>
@@ -123,52 +128,58 @@ const getPriorityVariant = (priority: string) => {
         </Card>
 
         <!-- Ticket Cards -->
+
         <div v-else class="space-y-3">
-          <Card
+          <RouterLink
             v-for="ticket in filteredTickets"
             :key="ticket.id"
-            class="border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
+            :to="{ name: 'ticket-details', params: { id: ticket.id } }"
+            class="block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <CardHeader class="pb-3">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div class="min-w-0 space-y-2">
-                  <CardTitle
-                    class="wrap-break-word text-base font-semibold text-slate-900 sm:text-lg"
-                  >
-                    {{ ticket.subject }}
-                  </CardTitle>
+            <Card
+              class="border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
+            >
+              <CardHeader class="pb-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0 space-y-2">
+                    <CardTitle
+                      class="wrap-break-word text-base font-semibold text-slate-900 sm:text-lg"
+                    >
+                      {{ ticket.subject }}
+                    </CardTitle>
 
-                  <CardDescription class="text-sm text-slate-500">
-                    Ticket #{{ ticket.id }}
-                  </CardDescription>
+                    <CardDescription class="text-sm text-slate-500">
+                      Ticket #{{ ticket.id }}
+                    </CardDescription>
+                  </div>
+
+                  <Badge variant="secondary" class="w-fit shrink-0 capitalize">
+                    {{ ticket.status.replace('-', ' ') }}
+                  </Badge>
                 </div>
+              </CardHeader>
 
-                <Badge variant="secondary" class="w-fit shrink-0 capitalize">
-                  {{ ticket.status.replace('-', ' ') }}
-                </Badge>
-              </div>
-            </CardHeader>
+              <CardContent class="space-y-4">
+                <p class="wrap-break-word text-sm leading-6 text-slate-600">
+                  {{ ticket.description }}
+                </p>
 
-            <CardContent class="space-y-4">
-              <p class="wrap-break-word text-sm leading-6 text-slate-600">
-                {{ ticket.description }}
-              </p>
+                <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                  <Badge variant="outline" class="border-slate-200 text-slate-600">
+                    {{ ticket.category }}
+                  </Badge>
 
-              <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-                <Badge variant="outline" class="border-slate-200 text-slate-600">
-                  {{ ticket.category }}
-                </Badge>
+                  <Badge :variant="getPriorityVariant(ticket.priority)" class="capitalize">
+                    {{ ticket.priority }} priority
+                  </Badge>
 
-                <Badge :variant="getPriorityVariant(ticket.priority)" class="capitalize">
-                  {{ ticket.priority }} priority
-                </Badge>
-
-                <Badge variant="outline" class="border-slate-200 text-slate-600">
-                  {{ ticket.type }}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+                  <Badge variant="outline" class="border-slate-200 text-slate-600">
+                    {{ ticket.type }}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </RouterLink>
         </div>
       </section>
     </div>

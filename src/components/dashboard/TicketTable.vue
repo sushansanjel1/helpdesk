@@ -11,8 +11,9 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui'
+import { onMounted } from 'vue'
 
-const { tickets } = useTickets()
+const { tickets, fetchTickets } = useTickets()
 
 function getStatusVariant(status: Ticket['status']) {
   switch (status) {
@@ -39,6 +40,10 @@ function getPriorityVariant(priority: string) {
       return 'secondary'
   }
 }
+
+onMounted(() => {
+  fetchTickets()
+})
 </script>
 
 <template>

@@ -1,67 +1,61 @@
-import { onMounted, ref } from 'vue'
-import type { Ticket } from '@/types/ticket'
-import { supabase } from '@/lib/supabase'
-import { getTickets } from '@/services/ticketService'
+import { ref } from 'vue'
+import type { CreateTicketInput, Ticket } from '@/types/ticket'
+import { ticketService } from '@/services/ticketService'
 
 export const useTickets = () => {
   const tickets = ref<Ticket[]>([])
+  const isFetching = ref(false)
+  const isCreating = ref(false)
 
-  const fetchTickets = async () => {
-    tickets.value = await getTickets()
+  const errorMessage = ref<string | null>(null)
+
+  //Convert unknown errors into readable messages (Error Handling)
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message
+    }
+    return `Something went wrong. Pleaase try again.`
   }
 
-  const addTicket = async (ticket: Ticket): Promise<Ticket | null> => {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+  //Fetch tickets
+  const fetchTickets = async (): Promise<void> => {
+    isFetching.value = true
+    errorMessage.value = null
 
-    if (userError || !user) {
-      console.error('Unable to get the current user')
+    try {
+      tickets.value = await ticketService.getAll()
+    } catch (err: unknown) {
+      errorMessage.value = getErrorMessage(err)
+    } finally {
+      isFetching.value = false
+    }
+  }
+  //Create ticket
+  const addTicket = async (ticket: CreateTicketInput): Promise<Ticket | null> => {
+    isCreating.value = true
+    errorMessage.value = null
+    try {
+      const newTicket = await ticketService.create(ticket)
+      tickets.value.unshift(newTicket)
+      return newTicket
+    } catch (err: unknown) {
+      errorMessage.value = getErrorMessage(err)
       return null
+    } finally {
+      isCreating.value = false
     }
-
-    const { data, error } = await supabase
-      .from('tickets')
-      .insert({
-        subject: ticket.subject,
-        description: ticket.description,
-        category: ticket.category,
-        priority: ticket.priority,
-        type: ticket.type,
-        status: 'open',
-        assignee: null,
-        user_id: user.id,
-      })
-      .select('id, subject, description, category, priority, type, status, assignee, created_at')
-      .single()
-
-    if (error) {
-      console.error('Failed to create ticket:', error.message)
-      return null
-    }
-
-    const savedTicket: Ticket = {
-      id: Number(data.id),
-      subject: data.subject,
-      description: data.description,
-      category: data.category,
-      priority: data.priority,
-      type: data.type,
-      status: data.status,
-      assignee: data.assignee,
-      createdAt: data.created_at,
-    }
-
-    tickets.value.unshift(savedTicket)
-    return savedTicket
   }
 
-  onMounted(() => {
-    fetchTickets()
-  })
+  // onMounted(() => {
+  //   fetchTickets()
+  // })
+
   return {
+    fetchTickets,
     tickets,
     addTicket,
+    isFetching,
+    isCreating,
+    errorMessage,
   }
 }

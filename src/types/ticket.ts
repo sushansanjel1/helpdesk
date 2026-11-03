@@ -12,3 +12,5 @@ export interface Ticket {
   assignee: string | null
   createdAt: string
 }
+
+export type CreateTicketInput = Omit<Ticket, 'id' | 'createdAt' | 'status' | 'assignee'>

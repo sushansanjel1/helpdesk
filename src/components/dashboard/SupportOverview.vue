@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import StatCard from './StatCard.vue'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useTickets } from '@/composable/ticket.ts'
 
-const { tickets } = useTickets()
+const { tickets, fetchTickets } = useTickets()
 
 const assignedTicketsValue = computed(
   () => tickets.value.filter((ticket) => ticket.assignee !== null).length,
@@ -18,6 +18,10 @@ const urgentTicketsValue = computed(
 const resolvedTicketsValue = computed(
   () => tickets.value.filter((ticket) => ticket.status === 'resolved').length,
 )
+
+onMounted(() => {
+  fetchTickets()
+})
 </script>
 
 <template>
