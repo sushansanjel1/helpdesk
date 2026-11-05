@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
 import { ticketService } from '@/services/ticketService'
 
@@ -6,49 +7,107 @@ export const useTickets = () => {
   const tickets = ref<Ticket[]>([])
   const isFetching = ref(false)
   const isCreating = ref(false)
+  const isUpdating = ref(false)
+  const isAssigning = ref(false)
 
-  const errorMessage = ref<string | null>(null)
+  const fetchError = ref<string | null>(null)
 
-  //Convert unknown errors into readable messages (Error Handling)
+  // Convert unknown errors into readable messages
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
       return error.message
     }
-    return `Something went wrong. Pleaase try again.`
+
+    return 'Something went wrong. Please try again.'
   }
 
-  //Fetch tickets
+  // Fetch tickets
   const fetchTickets = async (): Promise<void> => {
     isFetching.value = true
-    errorMessage.value = null
+    fetchError.value = null
 
     try {
       tickets.value = await ticketService.getAll()
     } catch (err: unknown) {
-      errorMessage.value = getErrorMessage(err)
+      fetchError.value = getErrorMessage(err)
+      toast.error(fetchError.value)
     } finally {
       isFetching.value = false
     }
   }
-  //Create ticket
+
+  // Create ticket
   const addTicket = async (ticket: CreateTicketInput): Promise<Ticket | null> => {
     isCreating.value = true
-    errorMessage.value = null
+
     try {
       const newTicket = await ticketService.create(ticket)
+
       tickets.value.unshift(newTicket)
+
+      toast.success('Ticket created successfully!')
+
       return newTicket
     } catch (err: unknown) {
-      errorMessage.value = getErrorMessage(err)
+      toast.error(getErrorMessage(err))
       return null
     } finally {
       isCreating.value = false
     }
   }
 
-  // onMounted(() => {
-  //   fetchTickets()
-  // })
+  // Update ticket status
+  const updateTicketStatus = async (
+    id: number,
+    status: Ticket['status'],
+  ): Promise<Ticket | null> => {
+    isUpdating.value = true
+
+    try {
+      // First update the database
+      const updatedTicket = await ticketService.updateStatus(id, status)
+
+      // Then synchronize the state
+      const ticketIndex = tickets.value.findIndex((ticket) => ticket.id === id)
+
+      if (ticketIndex !== -1) {
+        tickets.value[ticketIndex] = updatedTicket
+      }
+
+      toast.success('Ticket status updated successfully!')
+
+      return updatedTicket
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err))
+      return null
+    } finally {
+      isUpdating.value = false
+    }
+  }
+
+  // Assign or reassign a ticket
+  const assignTicket = async (id: number, assigneeId: string): Promise<Ticket | null> => {
+    isAssigning.value = true
+
+    try {
+      const updatedTicket = await ticketService.assignTicket(id, assigneeId)
+
+      const ticketIndex = tickets.value.findIndex((ticket) => ticket.id === id)
+
+      if (ticketIndex !== -1) {
+        tickets.value[ticketIndex] = updatedTicket
+      }
+
+      toast.success('Ticket assigned successfully!')
+
+      return updatedTicket
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err))
+      return null
+    } finally {
+      isAssigning.value = false
+    }
+  }
 
   return {
     fetchTickets,
@@ -56,6 +115,10 @@ export const useTickets = () => {
     addTicket,
     isFetching,
     isCreating,
-    errorMessage,
+    isUpdating,
+    fetchError,
+    updateTicketStatus,
+    assignTicket,
+    isAssigning,
   }
 }
