@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const profile = ref<UserProfile | null>(null)
   const isLoading = ref(false)
   const errorMessage = ref<string | null>(null)
+  const isUploadingAvatar = ref(false)
 
   //Computed Properties
   const role = computed(() => profile.value?.role ?? null)
@@ -38,6 +39,23 @@ export const useAuthStore = defineStore('auth', () => {
     errorMessage.value = null
   }
 
+  const uploadAvatar = async (file: File): Promise<void> => {
+    isUploadingAvatar.value = true
+
+    try {
+      const avatarUrl = await authService.uploadAvatar(file)
+
+      if (profile.value) {
+        profile.value = {
+          ...profile.value,
+          avatarUrl,
+        }
+      }
+    } finally {
+      isUploadingAvatar.value = false
+    }
+  }
+
   return {
     profile,
     role,
@@ -49,5 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
     canManageTickets,
     fetchProfile,
     clearProfile,
+    isUploadingAvatar,
+    uploadAvatar,
   }
 })
