@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
 import { ticketService } from '@/services/ticketService'

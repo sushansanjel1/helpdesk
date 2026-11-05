@@ -34,6 +34,50 @@ export const ticketService = {
   },
 
   // Create a new ticket
+  // async create(ticket: CreateTicketInput): Promise<Ticket> {
+  //   const {
+  //     data: { user },
+  //     error: userError,
+  //   } = await supabase.auth.getUser()
+
+  //   if (userError) {
+  //     throw new Error(`Authentication failed: ${userError.message}`)
+  //   }
+
+  //   if (!user) {
+  //     throw new Error('You must be logged in to create a ticket.')
+  //   }
+
+  //   //Temporary fix
+  //   const { data: roleData, error: roleError } = await supabase.rpc('current_user_role')
+
+  //   console.log('Authenticated user:', user.email)
+  //   console.log('Authenticated user ID:', user.id)
+  //   console.log('Database role:', roleData)
+  //   console.log('Role function error:', roleError)
+
+  //   //
+  //   const { data, error } = await supabase
+  //     .from('tickets')
+  //     .insert({
+  //       subject: ticket.subject,
+  //       description: ticket.description,
+  //       category: ticket.category,
+  //       priority: ticket.priority,
+  //       type: ticket.type,
+  //       status: 'open',
+  //       assignee_id: null,
+  //       user_id: user.id,
+  //     })
+  //     .select(ticketColumns)
+  //     .single()
+
+  //   if (error) {
+  //     throw new Error(`Failed to create ticket: ${error.message}`)
+  //   }
+
+  //   return mapTicket(data)
+  // },
   async create(ticket: CreateTicketInput): Promise<Ticket> {
     const {
       data: { user },
@@ -48,6 +92,16 @@ export const ticketService = {
       throw new Error('You must be logged in to create a ticket.')
     }
 
+    // Get the current user's role
+    const { data: role, error: roleError } = await supabase.rpc('current_user_role')
+
+    if (roleError || !role) {
+      throw new Error('Unable to determine your user role.')
+    }
+
+    // Automatically assign tickets created by CSRs to themselves
+    const assigneeId = role === 'admin' ? user.id : null
+
     const { data, error } = await supabase
       .from('tickets')
       .insert({
@@ -57,7 +111,7 @@ export const ticketService = {
         priority: ticket.priority,
         type: ticket.type,
         status: 'open',
-        assignee_id: null,
+        assignee_id: assigneeId,
         user_id: user.id,
       })
       .select(ticketColumns)
