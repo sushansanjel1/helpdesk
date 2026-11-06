@@ -34,6 +34,7 @@ export interface TicketRow {
   assignee: string | null
   assignee_id: string | null
   created_at: string
+  user_id: string
 }
 
 /**
@@ -51,9 +52,10 @@ export interface Ticket {
   assignee: string | null
   assigneeId: string | null
   createdAt: string
+  userId: string
 }
 
 export type CreateTicketInput = Omit<
   Ticket,
-  'id' | 'createdAt' | 'status' | 'assignee' | 'assigneeId'
+  'id' | 'createdAt' | 'status' | 'assignee' | 'assigneeId' | 'userId'
 >

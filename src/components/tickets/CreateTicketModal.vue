@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Ticket } from '@/types/ticket'
+import type { CreateTicketInput, Ticket } from '@/types/ticket'
 
 //Shadcn imports
 import {
@@ -40,7 +40,7 @@ const isSaving = ref(false)
 
 // Save function provided by the parent component
 const props = defineProps<{
-  saveTicket: (ticket: Ticket) => Promise<Ticket | null>
+  saveTicket: (ticket: CreateTicketInput) => Promise<Ticket | null>
 }>()
 
 // Control whether the dialog is open
@@ -53,17 +53,12 @@ const createTicket = async () => {
   isSaving.value = true
 
   try {
-    const newTicket: Ticket = {
-      id: Date.now(),
+    const newTicket: CreateTicketInput = {
       subject: subject.value.trim(),
       description: description.value.trim(),
       category: category.value,
       priority: priority.value,
       type: type.value,
-      status: 'open',
-      assignee: null,
-      assigneeId: null,
-      createdAt: new Date().toISOString(),
     }
 
     const savedTicket = await props.saveTicket(newTicket)

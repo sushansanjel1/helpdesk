@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { UserProfile } from '@/types/auth'
 import { authService } from '@/services/authService'
+import { USER_ROLE } from '@/constants'
 
 export const useAuthStore = defineStore('auth', () => {
   //State
@@ -13,9 +14,9 @@ export const useAuthStore = defineStore('auth', () => {
   //Computed Properties
   const role = computed(() => profile.value?.role ?? null)
 
-  const isAdmin = computed(() => role.value === 'admin')
-  const isManager = computed(() => role.value === 'manager')
-  const isCustomer = computed(() => role.value === 'customer')
+  const isAdmin = computed(() => role.value === USER_ROLE.ADMIN)
+  const isManager = computed(() => role.value === USER_ROLE.MANAGER)
+  const isCustomer = computed(() => role.value === USER_ROLE.CUSTOMER)
 
   const canManageTickets = computed(() => isAdmin.value || isManager.value)
 

@@ -13,10 +13,11 @@ const mapTicket = (ticket: TicketRow): Ticket => ({
   assignee: ticket.assignee,
   assigneeId: ticket.assignee_id,
   createdAt: ticket.created_at,
+  userId: ticket.user_id,
 })
 
 const ticketColumns =
-  'id, subject, description, category, priority, type, status, assignee, assignee_id, created_at'
+  'id, subject, description, category, priority, type, status, assignee, assignee_id, created_at, user_id'
 
 export const ticketService = {
   // Fetch tickets visible to the current user
