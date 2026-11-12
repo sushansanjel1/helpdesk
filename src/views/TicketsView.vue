@@ -46,7 +46,6 @@ const filteredTickets = computed(() => {
     return matchesSearch && matchesStatus && matchesPriority
   })
 })
-
 onMounted(() => {
   fetchTickets()
 })
