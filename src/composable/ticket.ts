@@ -1,86 +1,124 @@
 import { ref } from 'vue'
-import type { Ticket } from '@/types/ticket'
-import { supabase } from '@/lib/supabase'
-
-//Shared state: one ticket list for the entire app
-const tickets = ref<Ticket[]>([])
+import { toast } from 'vue-sonner'
+import type { CreateTicketInput, Ticket } from '@/types/ticket'
+import { ticketService } from '@/services/ticketService'
 
 export const useTickets = () => {
-  const fetchTickets = async () => {
-    const { data, error } = await supabase
-      .from('tickets')
-      .select('id, subject, description, category, priority, type, status, assignee, created_at')
-      .order('created_at', { ascending: false })
+  const tickets = ref<Ticket[]>([])
+  const isFetching = ref(false)
+  const isCreating = ref(false)
+  const isUpdating = ref(false)
+  const isAssigning = ref(false)
 
-    if (error) {
-      console.error('Failed to fetch tickets:', error.message)
-      return
+  const fetchError = ref<string | null>(null)
+
+  // Convert unknown errors into readable messages
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message
     }
 
-    //Why map the data?
-    // To keep the database snake_case and TypeScript camelCase consistent.
-    tickets.value = (data ?? []).map((ticket) => ({
-      id: Number(ticket.id),
-      subject: ticket.subject,
-      description: ticket.description,
-      category: ticket.category,
-      priority: ticket.priority,
-      type: ticket.type,
-      status: ticket.status as Ticket['status'],
-      assignee: ticket.assignee,
-      createdAt: ticket.created_at,
-    }))
+    return 'Something went wrong. Please try again.'
   }
 
-  const addTicket = async (ticket: Ticket): Promise<Ticket | null> => {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+  // Fetch tickets
+  const fetchTickets = async (): Promise<void> => {
+    isFetching.value = true
+    fetchError.value = null
 
-    if (userError || !user) {
-      console.error('Unable to get the current user')
-      return null
+    try {
+      tickets.value = await ticketService.getAll()
+    } catch (err: unknown) {
+      fetchError.value = getErrorMessage(err)
+      toast.error(fetchError.value)
+    } finally {
+      isFetching.value = false
     }
-
-    const { data, error } = await supabase
-      .from('tickets')
-      .insert({
-        subject: ticket.subject,
-        description: ticket.description,
-        category: ticket.category,
-        priority: ticket.priority,
-        type: ticket.type,
-        status: 'open',
-        assignee: null,
-        user_id: user.id,
-      })
-      .select('id, subject, description, category, priority, type, status, assignee, created_at')
-      .single()
-
-    if (error) {
-      console.error('Failed to create ticket:', error.message)
-      return null
-    }
-
-    const savedTicket: Ticket = {
-      id: Number(data.id),
-      subject: data.subject,
-      description: data.description,
-      category: data.category,
-      priority: data.priority,
-      type: data.type,
-      status: data.status as Ticket['status'],
-      assignee: data.assignee,
-      createdAt: data.created_at,
-    }
-
-    tickets.value.unshift(savedTicket)
-    return savedTicket
   }
+
+  // Create ticket
+  const addTicket = async (ticket: CreateTicketInput): Promise<Ticket | null> => {
+    isCreating.value = true
+
+    try {
+      const newTicket = await ticketService.create(ticket)
+
+      tickets.value.unshift(newTicket)
+
+      toast.success('Ticket created successfully!')
+
+      return newTicket
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err))
+      return null
+    } finally {
+      isCreating.value = false
+    }
+  }
+
+  // Update ticket status
+  const updateTicketStatus = async (
+    id: number,
+    status: Ticket['status'],
+  ): Promise<Ticket | null> => {
+    isUpdating.value = true
+
+    try {
+      // First update the database
+      const updatedTicket = await ticketService.updateStatus(id, status)
+
+      // Then synchronize the state
+      const ticketIndex = tickets.value.findIndex((ticket) => ticket.id === id)
+
+      if (ticketIndex !== -1) {
+        tickets.value[ticketIndex] = updatedTicket
+      }
+
+      toast.success('Ticket status updated successfully!')
+
+      return updatedTicket
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err))
+      return null
+    } finally {
+      isUpdating.value = false
+    }
+  }
+
+  // Assign or reassign a ticket
+  const assignTicket = async (id: number, assigneeId: string): Promise<Ticket | null> => {
+    isAssigning.value = true
+
+    try {
+      const updatedTicket = await ticketService.assignTicket(id, assigneeId)
+
+      const ticketIndex = tickets.value.findIndex((ticket) => ticket.id === id)
+
+      if (ticketIndex !== -1) {
+        tickets.value[ticketIndex] = updatedTicket
+      }
+
+      toast.success('Ticket assigned successfully!')
+
+      return updatedTicket
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err))
+      return null
+    } finally {
+      isAssigning.value = false
+    }
+  }
+
   return {
-    tickets,
     fetchTickets,
+    tickets,
     addTicket,
+    isFetching,
+    isCreating,
+    isUpdating,
+    fetchError,
+    updateTicketStatus,
+    assignTicket,
+    isAssigning,
   }
 }

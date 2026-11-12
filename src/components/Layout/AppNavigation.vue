@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { LayoutDashboard, Ticket, Users, Menu, X, Headset } from 'lucide-vue-next'
-
+import { useAuthStore } from '@/stores/auth'
+import { toast } from 'vue-sonner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,51 @@ import {
   Button,
 } from '../ui'
 
-const user = ref('Admin')
+const authStore = useAuthStore()
+const user = computed(() => authStore.profile?.fullName || 'User')
+
+const avatarInput = ref<HTMLInputElement | null>(null)
+// Open the file picker
+const openAvatarPicker = () => {
+  avatarInput.value?.click()
+}
+
+// Handle the selected image
+const handleAvatarSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) return
+
+  // Validate image type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Please select a PNG, JPEG, or WebP image.')
+    input.value = ''
+    return
+  }
+
+  // Validate image size (2 MB)
+  if (file.size > 2 * 1024 * 1024) {
+    toast.error('Image size must be less than 2 MB.')
+    input.value = ''
+    return
+  }
+
+  try {
+    await authStore.uploadAvatar(file)
+    toast.success('Profile picture updated successfully.')
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to upload profile picture.'
+
+    toast.error(message)
+  } finally {
+    // Allow selecting the same file again
+    input.value = ''
+  }
+}
+
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
 
@@ -133,7 +178,13 @@ const handleLogout = async () => {
         <span class="ml-auto rounded bg-slate-100 px-2 py-0.5 text-[10px]">Soon</span>
       </div>
     </nav>
-
+    <input
+      ref="avatarInput"
+      type="file"
+      accept="image/png, image/jpeg, image/webp"
+      class="hidden"
+      @change="handleAvatarSelected"
+    />
     <!-- Account section -->
     <div class="border-t border-slate-100 p-4">
       <DropdownMenu>
@@ -143,9 +194,18 @@ const handleLogout = async () => {
             class="flex h-auto w-full items-center justify-start gap-3 rounded-lg px-3 py-3 hover:bg-slate-50"
           >
             <span
-              class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700"
+              class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-semibold text-blue-700"
             >
-              {{ user.charAt(0) }}
+              <img
+                v-if="authStore.profile?.avatarUrl"
+                :src="authStore.profile.avatarUrl"
+                :alt="`${user}'s profile picture`"
+                class="h-full w-full object-cover"
+              />
+
+              <span v-else>
+                {{ user.charAt(0).toUpperCase() }}
+              </span>
             </span>
 
             <span class="flex flex-1 flex-col items-start">
@@ -159,6 +219,7 @@ const handleLogout = async () => {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
 
           <DropdownMenuGroup>
+            <DropdownMenuItem @select="openAvatarPicker"> Change Profile Picture </DropdownMenuItem>
             <DropdownMenuItem @select="handleLogout"> Log Out </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
