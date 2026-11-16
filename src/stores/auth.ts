@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
   const errorMessage = ref<string | null>(null)
   const isUploadingAvatar = ref(false)
+  const isUpdatingProfile = ref(false)
 
   //Computed Properties
   const role = computed(() => profile.value?.role ?? null)
@@ -57,6 +58,23 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateProfile = async (fullName: string): Promise<void> => {
+    isUpdatingProfile.value = true
+
+    try {
+      await authService.updateProfile(fullName)
+
+      if (profile.value) {
+        profile.value = {
+          ...profile.value,
+          fullName: fullName.trim(),
+        }
+      }
+    } finally {
+      isUpdatingProfile.value = false
+    }
+  }
+
   return {
     profile,
     role,
@@ -70,5 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
     clearProfile,
     isUploadingAvatar,
     uploadAvatar,
+    isUpdatingProfile,
+    updateProfile,
   }
 })

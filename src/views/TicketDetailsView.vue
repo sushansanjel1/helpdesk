@@ -8,9 +8,7 @@ import type { Ticket } from '@/types/ticket'
 import { useCsrs } from '@/composable/profile'
 
 const route = useRoute()
-
 const authStore = useAuthStore()
-
 const {
   tickets,
   isFetching,
@@ -101,7 +99,7 @@ onMounted(() => {
     <div class="mx-auto max-w-5xl space-y-6">
       <!-- Back button -->
       <RouterLink to="/tickets">
-        <Button variant="outline"> Back to Tickets </Button>
+        <Button yclass="mb-2"> Back to Tickets </Button>
       </RouterLink>
 
       <!-- Loading -->

@@ -34,8 +34,31 @@ export const authService = {
     return {
       id: data.id,
       fullName: data.full_name,
+      email: user.email ?? null,
       role: data.role as UserRole,
       avatarUrl: data.avatar_url,
+    }
+  },
+
+  //Update  the user's personal information
+  async updateProfile(fullName: string): Promise<void> {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      throw new Error('You must be logged in to update your profile.')
+    }
+
+    //Update full name in the profiles table
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName.trim() })
+      .eq('id', user.id)
+
+    if (profileError) {
+      throw new Error(`Failed to update profile: ${profileError.message}`)
     }
   },
 
@@ -50,34 +73,47 @@ export const authService = {
       throw new Error('You must be logged in to upload an avatar.')
     }
 
-    // Determine the file extension
-    const extension = file.type.split('/')[1]
+    // Get a safe file extension from the image type
+    const extensions: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    }
 
-    // Store each user's avatar inside their own folder
-    const filePath = `${user.id}/avatar.${extension}`
+    const extension = extensions[file.type]
 
-    // Upload the image to Supabase Storage
+    if (!extension) {
+      throw new Error('Please upload a JPG, PNG, or WebP image.')
+    }
+
+    // Generate a unique path for every upload
+    const filePath = `${user.id}/${crypto.randomUUID()}.${extension}`
+
+    // Upload the image
     const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, {
-      upsert: true,
       contentType: file.type,
+      cacheControl: '3600',
     })
 
     if (uploadError) {
       throw new Error(`Failed to upload avatar: ${uploadError.message}`)
     }
 
-    // Retrieve the public URL
+    // Get the new image's public URL
     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
 
     const avatarUrl = data.publicUrl
 
-    // Save the URL in the user's profile
+    // Save the new URL to the user's profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: avatarUrl })
       .eq('id', user.id)
 
     if (updateError) {
+      // Remove the uploaded file if saving the profile failed
+      await supabase.storage.from('avatars').remove([filePath])
+
       throw new Error(`Failed to update profile avatar: ${updateError.message}`)
     }
 

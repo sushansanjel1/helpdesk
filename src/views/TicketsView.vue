@@ -4,7 +4,7 @@ import type { Ticket, CreateTicketInput } from '@/types/ticket'
 import { useTickets } from '@/composable/ticket.ts'
 import CreateTicketModal from '@/components/tickets/CreateTicketModal.vue'
 import TicketFilters from '@/components/tickets/TicketFilters.vue'
-import TicketTable from '@/components/dashboard/TicketTable.vue'
+import TicketTable from '@/components/tickets/TicketTable.vue'
 
 //Fetching Tickets from composable(ticket.ts)
 const { tickets, addTicket, fetchTickets } = useTickets()
