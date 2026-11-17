@@ -11,8 +11,8 @@ const { tickets, addTicket, fetchTickets } = useTickets()
 
 //To hold the current filter values
 const searchQuery = ref('')
-const selectedStatus = ref('')
-const selectedPriority = ref('')
+const selectedStatus = ref<string[]>([])
+const selectedPriority = ref<string[]>([])
 
 const totalNoOfTickets = computed(() => tickets.value.length)
 
@@ -22,8 +22,8 @@ const handleSaveTicket = async (ticket: CreateTicketInput): Promise<Ticket | nul
 
 const handleFilterChange = (filters: {
   searchQuery: string
-  selectedStatus: string
-  selectedPriority: string
+  selectedStatus: string[]
+  selectedPriority: string[]
 }) => {
   searchQuery.value = filters.searchQuery
   selectedStatus.value = filters.selectedStatus
@@ -38,10 +38,13 @@ const filteredTickets = computed(() => {
     const matchesSearch =
       ticket.subject.toLowerCase().includes(query) || String(ticket.id).includes(query)
 
-    const matchesStatus = selectedStatus.value === '' || ticket.status === selectedStatus.value
+    //Match any selected status
+    const matchesStatus =
+      selectedStatus.value.length === 0 || selectedStatus.value.includes(ticket.status)
 
+    //Match any selected priority
     const matchesPriority =
-      selectedPriority.value === '' || ticket.priority === selectedPriority.value
+      selectedPriority.value.length === 0 || selectedPriority.value.includes(ticket.priority)
 
     return matchesSearch && matchesStatus && matchesPriority
   })
@@ -73,7 +76,11 @@ onMounted(() => {
 
       <!-- Search and Filters -->
       <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-        <TicketFilters @filter-change="handleFilterChange" />
+        <TicketFilters
+          :filtered-count="filteredTickets.length"
+          :total-count="totalNoOfTickets"
+          @filter-change="handleFilterChange"
+        />
       </section>
 
       <!-- Ticket List -->
