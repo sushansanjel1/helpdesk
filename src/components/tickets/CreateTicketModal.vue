@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
-
-//Shadcn imports
 import {
   Button,
   Input,
@@ -24,6 +22,8 @@ import {
   FieldLabel,
   FieldGroup,
 } from '@/components/ui'
+import { useVuelidate } from '@vuelidate/core'
+import { required, minLength, helpers } from '@vuelidate/validators'
 
 import { LoaderCircle } from 'lucide-vue-next'
 
@@ -33,6 +33,35 @@ const description = ref('')
 const category = ref('')
 const priority = ref('')
 const type = ref('')
+
+//Validation rules
+const rules = computed(() => ({
+  subject: {
+    required,
+    minLength: helpers.withMessage('Subject must be at least 5 characters', minLength(5)),
+  },
+  description: {
+    required,
+    minLength: helpers.withMessage('Description must be at least 10 characters.', minLength(10)),
+  },
+  category: {
+    required: helpers.withMessage('Please select a category.', required),
+  },
+  priority: {
+    required: helpers.withMessage('Please select a priority', required),
+  },
+  type: {
+    required: helpers.withMessage('Please select a type', required),
+  },
+}))
+
+const v$ = useVuelidate(rules, {
+  subject,
+  description,
+  category,
+  priority,
+  type,
+})
 
 //saving and error state
 const isSaving = ref(false)
@@ -46,9 +75,20 @@ const props = defineProps<{
 // Control whether the dialog is open
 const isDialogOpen = ref(false)
 
+//Handle Dialog Change function
+const handleDialogChange = async (isOpen: boolean) => {
+  if (!isOpen) {
+    await nextTick()
+    v$.value.$reset()
+  }
+}
+
 // Handle Create Ticket Form
 const createTicket = async () => {
   if (isSaving.value) return
+
+  const isValid = await v$.value.$validate()
+  if (!isValid) return
 
   isSaving.value = true
 
@@ -72,6 +112,8 @@ const createTicket = async () => {
     priority.value = ''
     type.value = ''
 
+    v$.value.$reset()
+
     isDialogOpen.value = false
   } catch (error) {
     console.error('Failed to create ticket:', error)
@@ -82,7 +124,7 @@ const createTicket = async () => {
 </script>
 
 <template>
-  <Dialog v-model:open="isDialogOpen">
+  <Dialog v-model:open="isDialogOpen" @update:open="handleDialogChange">
     <DialogTrigger as-child>
       <Button class="gap-2 rounded-lg px-4 font-medium shadow-sm">
         <span class="text-lg leading-none">+</span>
@@ -105,18 +147,23 @@ const createTicket = async () => {
 
       <form @submit.prevent="createTicket" class="mt-4">
         <FieldGroup class="gap-5">
+          <!-- Subject Field -->
           <Field class="gap-2">
             <FieldLabel for="subject" class="font-medium text-slate-700"> Subject </FieldLabel>
 
             <Input
               id="subject"
               v-model="subject"
-              required
               placeholder="e.g. Unable to access my account"
               class="border-slate-200 focus-visible:ring-blue-500"
+              :class="{ 'border-red-500 focus-visible:ring-red-500': v$.subject.$error }"
+              @blur="isDialogOpen && v$.subject.$touch"
             />
+            <p v-if="v$.subject.$error" class="text-xs text-red-500">
+              {{ v$.subject.$errors[0]?.$message }}
+            </p>
           </Field>
-
+          <!-- Description Field  -->
           <Field class="gap-2">
             <FieldLabel for="description" class="font-medium text-slate-700">
               Description
@@ -125,21 +172,30 @@ const createTicket = async () => {
             <Textarea
               id="description"
               v-model="description"
-              required
               placeholder="Describe what happened and what you were trying to do..."
               class="min-h-32 resize-y border-slate-200 focus-visible:ring-blue-500"
+              :class="{ 'border-red-500 focus-visible:ring-red-500': v$.description.$error }"
+              @blur="isDialogOpen && v$.description.$touch"
             />
             <p class="text-xs text-slate-500">
               Include any details that could help us understand the issue.
             </p>
+            <p v-if="v$.description.$error" class="text-xs text-red-500">
+              {{ v$.description.$errors[0]?.$message }}
+            </p>
           </Field>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <!-- Category Field  -->
             <Field class="min-w-0 gap-2">
               <FieldLabel for="category" class="font-medium text-slate-700"> Category </FieldLabel>
 
-              <Select v-model="category" name="category" required>
-                <SelectTrigger id="category" class="w-full border-slate-200">
+              <Select v-model="category" name="category" @update:model-value="v$.category.$touch">
+                <SelectTrigger
+                  id="category"
+                  class="w-full border-slate-200"
+                  :class="{ 'border-red-500 focus:ring-red-500': v$.category.$error }"
+                >
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
 
@@ -151,13 +207,22 @@ const createTicket = async () => {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+
+              <p v-if="v$.category.$error" class="text-xs text-red-500">
+                {{ v$.category.$errors[0]?.$message }}
+              </p>
             </Field>
 
+            <!-- Priority Field  -->
             <Field class="min-w-0 gap-2">
               <FieldLabel for="priority" class="font-medium text-slate-700"> Priority </FieldLabel>
 
-              <Select v-model="priority" name="priority" required>
-                <SelectTrigger id="priority" class="w-full border-slate-200">
+              <Select v-model="priority" name="priority" @update:model-value="v$.priority.$touch">
+                <SelectTrigger
+                  id="priority"
+                  class="w-full border-slate-200"
+                  :class="{ 'border-red-500 focus:ring-red-500': v$.priority.$error }"
+                >
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
 
@@ -168,13 +233,21 @@ const createTicket = async () => {
                   <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
-            </Field>
 
+              <p v-if="v$.priority.$error" class="text-xs text-red-500">
+                {{ v$.priority.$errors[0]?.$message }}
+              </p>
+            </Field>
+            <!-- Type Field  -->
             <Field class="min-w-0 gap-2">
               <FieldLabel for="type" class="font-medium text-slate-700"> Type </FieldLabel>
 
-              <Select v-model="type" name="type" required>
-                <SelectTrigger id="type" class="w-full border-slate-200">
+              <Select v-model="type" name="type" @update:model-value="v$.type.$touch">
+                <SelectTrigger
+                  id="type"
+                  class="w-full border-slate-200"
+                  :class="{ 'border-red-500 focus:ring-red-500': v$.type.$error }"
+                >
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
 
@@ -185,6 +258,10 @@ const createTicket = async () => {
                   <SelectItem value="request">Request</SelectItem>
                 </SelectContent>
               </Select>
+
+              <p v-if="v$.type.$error" class="text-xs text-red-500">
+                {{ v$.type.$errors[0]?.$message }}
+              </p>
             </Field>
           </div>
 
