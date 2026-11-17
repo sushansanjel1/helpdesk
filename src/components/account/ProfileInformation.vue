@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required, minLength, maxLength, helpers } from '@vuelidate/validators'
 import type { UserProfile } from '@/types/auth'
 import { Button } from '../ui'
 import { X, Save } from 'lucide-vue-next'
@@ -28,6 +30,18 @@ const emit = defineEmits<{
 const fullName = ref('')
 const showSaveConfirmation = ref(false)
 
+const rules = computed(() => ({
+  fullName: {
+    required: helpers.withMessage('Full name is required.', required),
+    minLength: helpers.withMessage('Full name must be at least 2 characters.', minLength(2)),
+    maxlength: helpers.withMessage('Full name cannot exceed 50 characters.', maxLength(50)),
+  },
+}))
+
+const v$ = useVuelidate(rules, {
+  fullName,
+})
+
 //Keep form values synchronized with the profile
 watch(
   () => [props.profile, props.isEditing],
@@ -39,7 +53,11 @@ watch(
   { immediate: true },
 )
 
-const handleSave = () => {
+const handleSave = async () => {
+  const isValid = await v$.value.$validate()
+
+  if (!isValid) return
+
   showSaveConfirmation.value = true
 }
 
@@ -96,12 +114,20 @@ const handleCancel = () => {
           id="fullName"
           v-model="fullName"
           type="text"
-          required
-          minlength="2"
           maxlength="100"
           placeholder="Enter your full name"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          :class="[
+            'w-full rounded-md border px-3 py-2 text-sm outline-none transition focus:ring-2',
+            v$.fullName.$error
+              ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
+              : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100',
+          ]"
+          @blur="v$.fullName.$touch()"
         />
+
+        <p v-if="v$.fullName.$error" class="text-xs text-red-500">
+          {{ v$.fullName.$errors[0]?.$message }}
+        </p>
       </div>
 
       <div class="space-y-2">
