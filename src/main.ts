@@ -1,12 +1,12 @@
-import './assets/main.css'
-
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import { createApp } from 'vue'
 import App from './App.vue'
+import { supabase } from './lib/supabase.ts'
 import router from './router'
 import { useAuthStore } from './stores/auth.ts'
-import { supabase } from './lib/supabase.ts'
+
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import './assets/main.css'
 
 const app = createApp(App)
 const pinia = createPinia()

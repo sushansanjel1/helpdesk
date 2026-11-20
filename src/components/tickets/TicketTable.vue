@@ -119,7 +119,7 @@ function getPriorityVariant(priority: string) {
             <TableCell class="rounded-l-xl px-5 py-4 font-medium tabular-nums text-slate-500">
               #{{ ticket.id }}
             </TableCell>
-            <TableCell class="rounded-l-xl px-5 py-4 font-medium tabular-nums text-slate-500">
+            <TableCell class="px-5 py-4 font-medium tabular-nums text-slate-500">
               {{ ticket.subject }}
             </TableCell>
 

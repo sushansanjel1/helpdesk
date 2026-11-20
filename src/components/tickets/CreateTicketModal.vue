@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
 import {
   Button,
   Input,
-  Textarea,
   Select,
   SelectTrigger,
   SelectValue,
@@ -24,8 +23,11 @@ import {
 } from '@/components/ui'
 import { useVuelidate } from '@vuelidate/core'
 import { required, minLength, helpers } from '@vuelidate/validators'
+import { QuillEditor } from '@vueup/vue-quill'
 
 import { LoaderCircle } from 'lucide-vue-next'
+import UIImageUploader from '../lib/UIImageUploader.vue'
+import UIImagePreview from '../lib/UIImagePreview.vue'
 
 //storing values from modal
 const subject = ref('')
@@ -33,6 +35,11 @@ const description = ref('')
 const category = ref('')
 const priority = ref('')
 const type = ref('')
+const images = ref<File[]>([])
+
+function handleUploaded(files: File[]) {
+  console.log('Images added:', files)
+}
 
 //Validation rules
 const rules = computed(() => ({
@@ -42,7 +49,7 @@ const rules = computed(() => ({
   },
   description: {
     required,
-    minLength: helpers.withMessage('Description must be at least 10 characters.', minLength(10)),
+    // minLength: helpers.withMessage('Description must be at least 10 characters.', minLength(10)),
   },
   category: {
     required: helpers.withMessage('Please select a category.', required),
@@ -121,6 +128,13 @@ const createTicket = async () => {
     isSaving.value = false
   }
 }
+
+// clear images when the dialog is closed
+watch(isDialogOpen, (newValue) => {
+  if (!newValue) {
+    images.value = []
+  }
+})
 </script>
 
 <template>
@@ -169,20 +183,47 @@ const createTicket = async () => {
               Description
             </FieldLabel>
 
-            <Textarea
+            <!-- <Textarea
               id="description"
               v-model="description"
               placeholder="Describe what happened and what you were trying to do..."
               class="min-h-32 resize-y border-slate-200 focus-visible:ring-blue-500"
               :class="{ 'border-red-500 focus-visible:ring-red-500': v$.description.$error }"
               @blur="isDialogOpen && v$.description.$touch"
-            />
+            /> -->
+            <!-- {{ description }} -->
+            <QuillEditor
+              theme="snow"
+              id="description"
+              v-model:content="description"
+              content-type="html"
+              toolbar="minimal"
+              placeholder="Describe what happened and what you were trying to do..."
+              class="min-h-32 resize-y border-slate-200 focus-visible:ring-blue-500"
+              :class="{ 'border-red-500 focus-visible:ring-red-500': v$.description.$error }"
+              @blur="isDialogOpen && v$.description.$touch"
+            ></QuillEditor>
+
             <p class="text-xs text-slate-500">
               Include any details that could help us understand the issue.
             </p>
             <p v-if="v$.description.$error" class="text-xs text-red-500">
               {{ v$.description.$errors[0]?.$message }}
             </p>
+          </Field>
+
+          <!-- Image Upload Field -->
+          <Field class="gap-2">
+            <FieldLabel for="images" class="font-medium text-slate-700"> Images </FieldLabel>
+            <UIImageUploader
+              v-model="images"
+              @uploaded="handleUploaded"
+              :max-size="5"
+              :max-files="5"
+            />
+            <div class="my-4">
+              <UIImagePreview v-model="images" multiple />
+            </div>
           </Field>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

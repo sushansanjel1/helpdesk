@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Search, SlidersHorizontal, X } from 'lucide-vue-next'
 import {
   Input,
@@ -14,10 +14,16 @@ import {
   DropdownMenuCheckboxItem,
 } from '@/components/ui'
 
-const props = defineProps<{
-  filteredCount: number
-  totalCount: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    filteredCount: number
+    totalCount: number
+    showStatusFilter?: boolean
+  }>(),
+  {
+    showStatusFilter: true,
+  },
+)
 
 const searchQuery = ref('')
 
@@ -79,6 +85,12 @@ const removePriority = (priority: string) => {
   selectedPriority.value = selectedPriority.value.filter((item) => item !== priority)
 }
 
+const hasVisibleFilters = computed(() => {
+  return (
+    (props.showStatusFilter && selectedStatus.value.length > 0) || selectedPriority.value.length > 0
+  )
+})
+
 //Clear everything
 const clearFilters = () => {
   searchQuery.value = ''
@@ -119,27 +131,27 @@ watch([searchQuery, selectedStatus, selectedPriority], emitFilters, { deep: true
           <SlidersHorizontal class="h-4 w-4 shrink-0 text-slate-400" />
 
           <!-- Default label -->
-          <span v-if="!selectedStatus.length && !selectedPriority.length" class="text-slate-500">
-            Filters
-          </span>
+          <span v-if="!hasVisibleFilters" class="text-slate-500"> Filters </span>
 
           <!-- Selected Status Chips -->
-          <span
-            v-for="status in statusOptions.filter((item) => selectedStatus.includes(item.value))"
-            :key="status.value"
-            class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
-          >
-            {{ status.label }}
-
-            <button
-              type="button"
-              @click.stop="removeStatus(status.value)"
-              :aria-label="`Remove ${status.label} filter`"
-              class="rounded-full hover:text-blue-900"
+          <template v-if="props.showStatusFilter">
+            <span
+              v-for="status in statusOptions.filter((item) => selectedStatus.includes(item.value))"
+              :key="status.value"
+              class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
             >
-              <X class="h-3 w-3" />
-            </button>
-          </span>
+              {{ status.label }}
+
+              <button
+                type="button"
+                @click.stop="removeStatus(status.value)"
+                :aria-label="`Remove ${status.label} filter`"
+                class="rounded-full hover:text-blue-900"
+              >
+                <X class="h-3 w-3" />
+              </button>
+            </span>
+          </template>
 
           <!-- Selected Priority Chips -->
           <span
@@ -169,8 +181,8 @@ watch([searchQuery, selectedStatus, selectedPriority], emitFilters, { deep: true
           Filter by
         </DropdownMenuLabel>
 
-        <!-- Status Submenu -->
-        <DropdownMenuSub>
+        <!-- Status Submenu: Hidden in Kanban view -->
+        <DropdownMenuSub v-if="props.showStatusFilter">
           <DropdownMenuSubTrigger> Status </DropdownMenuSubTrigger>
 
           <DropdownMenuSubContent class="w-48">
@@ -214,11 +226,17 @@ watch([searchQuery, selectedStatus, selectedPriority], emitFilters, { deep: true
         </button>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <!-- Results Count -->
     <p class="shrink-0 text-sm text-slate-500 sm:ml-auto">
       Showing
-      <span class="font-semibold text-slate-900">{{ props.filteredCount }}</span>
+      <span class="font-semibold text-slate-900">
+        {{ props.filteredCount }}
+      </span>
       of
-      <span class="font-semibold text-slate-900">{{ props.totalCount }}</span>
+      <span class="font-semibold text-slate-900">
+        {{ props.totalCount }}
+      </span>
     </p>
   </div>
 </template>
