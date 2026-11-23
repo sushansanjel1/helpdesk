@@ -3,16 +3,17 @@ import { computed, ref, onMounted } from 'vue'
 import type { Ticket, CreateTicketInput } from '@/types/ticket'
 import { useTickets } from '@/composable/ticket'
 import { useAuthStore } from '@/stores/auth'
-
 import CreateTicketModal from '@/components/tickets/CreateTicketModal.vue'
 import TicketFilters from '@/components/tickets/TicketFilters.vue'
 import TicketTable from '@/components/tickets/TicketTable.vue'
-import TicketKanban from '@/components/tickets/TicketKanban.vue'
+import TicketKanbanBoard from '@/components/tickets/TicketKanbanBoard.vue'
+import TicketTableSkeleton from '@/components/skeleton/TicketTableSkeleton.vue'
+import TicketKanbanSkeleton from '@/components/skeleton/TicketKanbanSkeleton.vue'
 
 // Stores and composables
 const authStore = useAuthStore()
 
-const { tickets, addTicket, fetchTickets, updateTicketStatus } = useTickets()
+const { tickets, addTicket, fetchTickets, updateTicketStatus, isFetching } = useTickets()
 
 // View selection
 type ViewMode = 'kanban' | 'table'
@@ -152,10 +153,22 @@ onMounted(() => {
       </section>
 
       <!-- Kanban Board -->
-      <TicketKanban
-        v-if="activeView === 'kanban'"
+      <!-- Kanban Loading Skeleton -->
+      <TicketKanbanSkeleton v-if="activeView === 'kanban' && isFetching" />
+
+      <!-- Actual Kanban Board -->
+      <TicketKanbanBoard
+        v-else-if="activeView === 'kanban'"
         :tickets="searchedAndPriorityFilteredTickets"
         :update-ticket-status="updateTicketStatus"
+      />
+
+      <!-- Table View Loading Skeleton -->
+      <TicketTableSkeleton
+        v-else-if="isFetching"
+        title="All Tickets"
+        description="Manage and track your support requests."
+        :rows="8"
       />
 
       <!-- Table View -->

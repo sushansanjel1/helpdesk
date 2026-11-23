@@ -2,7 +2,7 @@
 import { ref, watch, nextTick } from 'vue'
 import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus'
 import type { Ticket } from '@/types/ticket'
-import TicketCard from '@/components/tickets/TicketCard.vue'
+import TicketKanbanCard from './TicketKanbanCard.vue'
 import { getAvailableStatusActions } from '@/utils/ticketStatus'
 import { toast } from 'vue-sonner'
 
@@ -188,7 +188,7 @@ const handleDragEnd = async (event: DraggableEvent) => {
                 :data-ticket-id="ticket.id"
                 class="kanban-ticket cursor-grab active:cursor-grabbing"
               >
-                <TicketCard :ticket="ticket" />
+                <TicketKanbanCard :ticket="ticket" />
               </div>
               <!-- Dedicated bottom drop zone -->
               <div

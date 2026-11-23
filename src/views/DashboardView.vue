@@ -2,12 +2,13 @@
 import { computed, onMounted } from 'vue'
 import SupportOverview from '@/components/dashboard/SupportOverview.vue'
 import TicketTable from '@/components/tickets/TicketTable.vue'
+import TicketTableSkeleton from '@/components/skeleton/TicketTableSkeleton.vue'
 import TicketStatusChart from '@/components/dashboard/TicketStatusChart.vue'
 import TicketCreationChart from '@/components/dashboard/TicketCreationChart.vue'
 import { useTickets } from '@/composable/ticket'
 import { useAuthStore } from '@/stores/auth'
 
-const { tickets, fetchTickets } = useTickets()
+const { tickets, fetchTickets, isFetching } = useTickets()
 const authStore = useAuthStore()
 
 //Tickets displayed in the charts
@@ -121,7 +122,18 @@ onMounted(() => {
         <TicketCreationChart :tickets="chartTickets" />
       </div>
 
+      <!-- Ticket table loading skeleton -->
+      <TicketTableSkeleton
+        v-if="isFetching"
+        :title="tableTitle"
+        :description="tableDescription"
+        :rows="5"
+        show-view-all
+      />
+
+      <!-- Actual ticket table -->
       <TicketTable
+        v-else
         :tickets="recentTickets"
         :title="tableTitle"
         :description="tableDescription"

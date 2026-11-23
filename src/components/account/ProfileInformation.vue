@@ -27,7 +27,7 @@ const emit = defineEmits<{
   (event: 'cancel'): void
 }>()
 
-const fullName = ref('')
+const fullName = ref(props.profile?.fullName ?? '')
 const showSaveConfirmation = ref(false)
 
 const rules = computed(() => ({
@@ -42,16 +42,16 @@ const v$ = useVuelidate(rules, {
   fullName,
 })
 
-//Keep form values synchronized with the profile
-watch(
-  () => [props.profile, props.isEditing],
-  () => {
-    if (props.profile) {
-      fullName.value = props.profile.fullName ?? ''
-    }
-  },
-  { immediate: true },
-)
+// //Keep form values synchronized with the profile
+// watch(
+//   () => [props.profile, props.isEditing],
+//   () => {
+//     if (props.profile) {
+//       fullName.value = props.profile.fullName ?? ''
+//     }
+//   },
+//   { immediate: true },
+// )
 
 const handleSave = async () => {
   const isValid = await v$.value.$validate()
