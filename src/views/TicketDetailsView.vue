@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute, RouterLink } from 'vue-router'
-import { useTickets } from '@/composable/ticket'
+import { useTickets } from '@/composable/ticket/ticket'
 import { Button } from '@/components/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StatCard from './StatCard.vue'
 import { computed, onMounted } from 'vue'
-import { useTickets } from '@/composable/ticket.ts'
+import { useTickets } from '@/composable/ticket/ticket.ts'
 
 const { tickets, fetchTickets } = useTickets()
 
