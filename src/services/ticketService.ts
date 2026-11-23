@@ -34,51 +34,6 @@ export const ticketService = {
     return data.map(mapTicket)
   },
 
-  // Create a new ticket
-  // async create(ticket: CreateTicketInput): Promise<Ticket> {
-  //   const {
-  //     data: { user },
-  //     error: userError,
-  //   } = await supabase.auth.getUser()
-
-  //   if (userError) {
-  //     throw new Error(`Authentication failed: ${userError.message}`)
-  //   }
-
-  //   if (!user) {
-  //     throw new Error('You must be logged in to create a ticket.')
-  //   }
-
-  //   //Temporary fix
-  //   const { data: roleData, error: roleError } = await supabase.rpc('current_user_role')
-
-  //   console.log('Authenticated user:', user.email)
-  //   console.log('Authenticated user ID:', user.id)
-  //   console.log('Database role:', roleData)
-  //   console.log('Role function error:', roleError)
-
-  //   //
-  //   const { data, error } = await supabase
-  //     .from('tickets')
-  //     .insert({
-  //       subject: ticket.subject,
-  //       description: ticket.description,
-  //       category: ticket.category,
-  //       priority: ticket.priority,
-  //       type: ticket.type,
-  //       status: 'open',
-  //       assignee_id: null,
-  //       user_id: user.id,
-  //     })
-  //     .select(ticketColumns)
-  //     .single()
-
-  //   if (error) {
-  //     throw new Error(`Failed to create ticket: ${error.message}`)
-  //   }
-
-  //   return mapTicket(data)
-  // },
   async create(ticket: CreateTicketInput): Promise<Ticket> {
     const {
       data: { user },

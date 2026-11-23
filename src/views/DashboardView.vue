@@ -1,57 +1,39 @@
-<!-- <script setup lang="ts">
-import SupportOverview from '@/components/dashboard/SupportOverview.vue'
-import TicketTable from '@/components/dashboard/TicketTable.vue'
-</script>
-
-<template>
-  <div class="min-h-screen px-4 pb-8 pt-5 sm:px-6 lg:pt-8 lg:px-8">
-    <div class="mx-auto max-w-7xl space-y-8">
-      <SupportOverview />
-      <TicketTable />
-    </div>
-  </div>
-</template> -->
-
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import SupportOverview from '@/components/dashboard/SupportOverview.vue'
-import TicketTable from '@/components/dashboard/TicketTable.vue'
-import { useTickets } from '@/composable/ticket'
+import TicketTable from '@/components/tickets/TicketTable.vue'
+import TicketTableSkeleton from '@/components/skeleton/TicketTableSkeleton.vue'
+import TicketStatusChart from '@/components/dashboard/TicketStatusChart.vue'
+import TicketCreationChart from '@/components/dashboard/TicketCreationChart.vue'
+import { useTickets } from '@/composable/ticket/ticket'
 import { useAuthStore } from '@/stores/auth'
 
-const { tickets, fetchTickets } = useTickets()
+const { tickets, fetchTickets, isFetching } = useTickets()
 const authStore = useAuthStore()
 
-// Priority ranking
-const priorityOrder: Record<string, number> = {
-  urgent: 1,
-  high: 2,
-  medium: 3,
-  low: 4,
-}
+//Tickets displayed in the charts
+const chartTickets = computed(() => {
+  const currentUserId = authStore.profile?.id
+  const currentRole = authStore.profile?.role
 
-// Get the latest 5 tickets assigned to the logged-in user,
-// sorted by priority and then creation date.
-// const recentTickets = computed(() => {
-//   const currentUserId = authStore.profile?.id
+  if (!currentUserId || !currentRole) return []
 
-//   if (!currentUserId) return []
+  if (currentRole === 'customer') {
+    return tickets.value.filter((ticket) => ticket.userId === currentUserId)
+  }
 
-//   return tickets.value
-//     .filter((ticket) => ticket.assigneeId === currentUserId)
-//     .sort((a, b) => {
-//       const priorityDifference =
-//         (priorityOrder[a.priority.toLowerCase()] ?? 5) -
-//         (priorityOrder[b.priority.toLowerCase()] ?? 5)
+  if (currentRole === 'admin') {
+    return tickets.value.filter((ticket) => ticket.assigneeId === currentUserId)
+  }
 
-//       if (priorityDifference !== 0) {
-//         return priorityDifference
-//       }
+  if (currentRole === 'manager') {
+    return tickets.value
+  }
 
-//       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-//     })
-//     .slice(0, 5)
-// })
+  return []
+})
+
+//Latest five tickets displayed in the table
 const recentTickets = computed(() => {
   const currentUserId = authStore.profile?.id
   const currentRole = authStore.profile?.role
@@ -126,11 +108,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen px-4 pb-8 pt-5 sm:px-6 lg:pt-8 lg:px-8">
+  <div class="min-h-screen px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:pt-8">
     <div class="mx-auto max-w-7xl space-y-8">
       <SupportOverview />
 
+      <!-- Dashboard charts -->
+      <div
+        v-if="authStore.profile?.role === 'admin' || authStore.profile?.role === 'manager'"
+        class="grid grid-cols-1 gap-6 lg:grid-cols-2"
+      >
+        <TicketStatusChart :tickets="chartTickets" />
+
+        <TicketCreationChart :tickets="chartTickets" />
+      </div>
+
+      <!-- Ticket table loading skeleton -->
+      <TicketTableSkeleton
+        v-if="isFetching"
+        :title="tableTitle"
+        :description="tableDescription"
+        :rows="5"
+        show-view-all
+      />
+
+      <!-- Actual ticket table -->
       <TicketTable
+        v-else
         :tickets="recentTickets"
         :title="tableTitle"
         :description="tableDescription"

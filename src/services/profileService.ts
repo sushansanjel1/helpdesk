@@ -6,6 +6,10 @@ export interface CSRProfile {
 }
 
 export const profileService = {
+  /**
+   * This is my comment
+   * @returns CSR
+   */
   async getCSRs(): Promise<CSRProfile[]> {
     const { data, error } = await supabase.rpc('get_csrs')
 

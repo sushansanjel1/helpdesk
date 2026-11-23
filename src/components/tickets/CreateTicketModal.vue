@@ -1,88 +1,74 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
-
-//Shadcn imports
+import { useCreateTicket } from '@/composable/ticket/useCreateTickets.ts'
 import {
   Button,
-  Input,
-  Textarea,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectItem,
-  SelectContent,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
-  DialogFooter,
-  Field,
-  FieldLabel,
-  FieldGroup,
 } from '@/components/ui'
-
-import { LoaderCircle } from 'lucide-vue-next'
-
-//storing values from modal
-const subject = ref('')
-const description = ref('')
-const category = ref('')
-const priority = ref('')
-const type = ref('')
-
-//saving and error state
-const isSaving = ref(false)
-// const errorMessage = ref('')
+import CreateTicketForm from './CreateTicketForm.vue'
 
 // Save function provided by the parent component
 const props = defineProps<{
   saveTicket: (ticket: CreateTicketInput) => Promise<Ticket | null>
 }>()
 
-// Control whether the dialog is open
+// Form state, validation, and submission logic
+const {
+  subject,
+  description,
+  category,
+  priority,
+  type,
+  isSaving,
+  v$,
+  createTicket,
+  resetValidation,
+} = useCreateTicket(props.saveTicket)
+
+// Image upload state
+const images = ref<File[]>([])
+
+// Dialog state
 const isDialogOpen = ref(false)
 
-// Handle Create Ticket Form
-const createTicket = async () => {
-  if (isSaving.value) return
+// Handle successful ticket creation
+async function handleCreateTicket() {
+  const isCreated = await createTicket()
 
-  isSaving.value = true
-
-  try {
-    const newTicket: CreateTicketInput = {
-      subject: subject.value.trim(),
-      description: description.value.trim(),
-      category: category.value,
-      priority: priority.value,
-      type: type.value,
-    }
-
-    const savedTicket = await props.saveTicket(newTicket)
-
-    if (!savedTicket) return
-
-    // Reset the form after successful saving
-    subject.value = ''
-    description.value = ''
-    category.value = ''
-    priority.value = ''
-    type.value = ''
-
+  if (isCreated) {
     isDialogOpen.value = false
-  } catch (error) {
-    console.error('Failed to create ticket:', error)
-  } finally {
-    isSaving.value = false
   }
 }
+
+// Handle dialog changes
+async function handleDialogChange(isOpen: boolean) {
+  if (!isOpen) {
+    await nextTick()
+    resetValidation()
+  }
+}
+
+// Handle uploaded images
+function handleUploaded(files: File[]) {
+  console.log('Images added:', files)
+}
+
+// Clear images when dialog closes
+watch(isDialogOpen, (newValue) => {
+  if (!newValue) {
+    images.value = []
+  }
+})
 </script>
 
 <template>
-  <Dialog v-model:open="isDialogOpen">
+  <Dialog v-model:open="isDialogOpen" @update:open="handleDialogChange">
     <DialogTrigger as-child>
       <Button class="gap-2 rounded-lg px-4 font-medium shadow-sm">
         <span class="text-lg leading-none">+</span>
@@ -103,105 +89,27 @@ const createTicket = async () => {
         </DialogDescription>
       </DialogHeader>
 
-      <form @submit.prevent="createTicket" class="mt-4">
-        <FieldGroup class="gap-5">
-          <Field class="gap-2">
-            <FieldLabel for="subject" class="font-medium text-slate-700"> Subject </FieldLabel>
-
-            <Input
-              id="subject"
-              v-model="subject"
-              required
-              placeholder="e.g. Unable to access my account"
-              class="border-slate-200 focus-visible:ring-blue-500"
-            />
-          </Field>
-
-          <Field class="gap-2">
-            <FieldLabel for="description" class="font-medium text-slate-700">
-              Description
-            </FieldLabel>
-
-            <Textarea
-              id="description"
-              v-model="description"
-              required
-              placeholder="Describe what happened and what you were trying to do..."
-              class="min-h-32 resize-y border-slate-200 focus-visible:ring-blue-500"
-            />
-            <p class="text-xs text-slate-500">
-              Include any details that could help us understand the issue.
-            </p>
-          </Field>
-
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Field class="min-w-0 gap-2">
-              <FieldLabel for="category" class="font-medium text-slate-700"> Category </FieldLabel>
-
-              <Select v-model="category" name="category" required>
-                <SelectTrigger id="category" class="w-full border-slate-200">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="technical">Technical Issue</SelectItem>
-                  <SelectItem value="account">Account &amp; login</SelectItem>
-                  <SelectItem value="billing">Billing</SelectItem>
-                  <SelectItem value="product">Product Issue</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field class="min-w-0 gap-2">
-              <FieldLabel for="priority" class="font-medium text-slate-700"> Priority </FieldLabel>
-
-              <Select v-model="priority" name="priority" required>
-                <SelectTrigger id="priority" class="w-full border-slate-200">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field class="min-w-0 gap-2">
-              <FieldLabel for="type" class="font-medium text-slate-700"> Type </FieldLabel>
-
-              <Select v-model="type" name="type" required>
-                <SelectTrigger id="type" class="w-full border-slate-200">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="question">Question</SelectItem>
-                  <SelectItem value="incident">Incident</SelectItem>
-                  <SelectItem value="problem">Problem</SelectItem>
-                  <SelectItem value="request">Request</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
-
-          <DialogFooter class="mt-2 gap-2 border-t border-slate-100 pt-5 sm:gap-2">
-            <DialogClose as-child>
-              <Button type="button" variant="outline" class="w-full border-slate-200 sm:w-auto">
-                Cancel
-              </Button>
-            </DialogClose>
-
-            <Button type="submit" :disabled="isSaving" class="w-full sm:w-auto">
-              <LoaderCircle v-if="isSaving" class="mr-2 size-4 animate-spin" />
-              {{ isSaving ? 'Creating...' : 'Create Ticket' }}
-            </Button>
-          </DialogFooter>
-        </FieldGroup>
-      </form>
+      <div class="mt-4">
+        <CreateTicketForm
+          :subject="subject"
+          @update:subject="subject = $event"
+          :description="description"
+          @update:description="description = $event"
+          :category="category"
+          @update:category="category = $event"
+          :priority="priority"
+          @update:priority="priority = $event"
+          :type="type"
+          @update:type="type = $event"
+          :images="images"
+          @update:images="images = $event"
+          :is-saving="isSaving"
+          :v$="v$"
+          @submit="handleCreateTicket"
+          @cancel="isDialogOpen = false"
+          @uploaded="handleUploaded"
+        />
+      </div>
     </DialogContent>
   </Dialog>
 </template>

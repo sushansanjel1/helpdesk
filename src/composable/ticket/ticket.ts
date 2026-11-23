@@ -5,6 +5,8 @@ import { ticketService } from '@/services/ticketService'
 
 export const useTickets = () => {
   const tickets = ref<Ticket[]>([])
+
+  //convert isFetching, isCreating, isUpdating, isAssigning to a single isLoading state.
   const isFetching = ref(false)
   const isCreating = ref(false)
   const isUpdating = ref(false)
@@ -27,6 +29,7 @@ export const useTickets = () => {
     fetchError.value = null
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 300)) // Simulate 300ms delay for demonstration
       tickets.value = await ticketService.getAll()
     } catch (err: unknown) {
       fetchError.value = getErrorMessage(err)

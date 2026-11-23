@@ -1,16 +1,15 @@
 <script lang="ts" setup>
 import { useRoute, RouterLink } from 'vue-router'
-import { useTickets } from '@/composable/ticket'
+import { useTickets } from '@/composable/ticket/ticket'
 import { Button } from '@/components/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import type { Ticket } from '@/types/ticket'
 import { useCsrs } from '@/composable/profile'
+import { getAvailableStatusActions } from '@/utils/ticketStatus'
 
 const route = useRoute()
-
 const authStore = useAuthStore()
-
 const {
   tickets,
   isFetching,
@@ -48,37 +47,10 @@ const handleAssignment = async () => {
   await assignTicket(ticket.value.id, selectedCsrId.value)
 }
 
-//Available status actions for the current ticket
-type StatusAction = {
-  label: string
-  status: Ticket['status']
-}
-
-const availableActions = computed<StatusAction[]>(() => {
+const availableActions = computed(() => {
   if (!ticket.value || !authStore.canManageTickets) return []
 
-  switch (ticket.value.status) {
-    case 'open':
-      return [{ label: 'Start Progress', status: 'in-progress' }]
-
-    case 'in-progress':
-      return [
-        { label: 'Stop Progress', status: 'open' },
-        { label: 'Resolve', status: 'resolved' },
-      ]
-
-    case 'resolved':
-      return [
-        { label: 'Reopen', status: 'in-progress' },
-        { label: 'Close', status: 'closed' },
-      ]
-
-    case 'closed':
-      return [{ label: 'Reopen', status: 'open' }]
-
-    default:
-      return []
-  }
+  return getAvailableStatusActions(ticket.value.status)
 })
 
 //Update ticket status
@@ -101,7 +73,7 @@ onMounted(() => {
     <div class="mx-auto max-w-5xl space-y-6">
       <!-- Back button -->
       <RouterLink to="/tickets">
-        <Button variant="outline"> Back to Tickets </Button>
+        <Button yclass="mb-2"> Back to Tickets </Button>
       </RouterLink>
 
       <!-- Loading -->
@@ -127,9 +99,7 @@ onMounted(() => {
             {{ ticket.subject }}
           </h1>
 
-          <p class="mt-4 leading-7 text-slate-600">
-            {{ ticket.description }}
-          </p>
+          <p class="mt-4 leading-7 text-slate-600" v-html="ticket.description"></p>
         </section>
 
         <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

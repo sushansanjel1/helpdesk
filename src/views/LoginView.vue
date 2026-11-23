@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { useVuelidate } from '@vuelidate/core'
+import { required, email as emailValidator, helpers } from '@vuelidate/validators'
 
 const router = useRouter()
 
@@ -10,11 +12,30 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 
+const rules = computed(() => ({
+  email: {
+    required: helpers.withMessage('Email is required.', required),
+    email: helpers.withMessage('Please enter a valid email address.', emailValidator),
+  },
+  password: {
+    required: helpers.withMessage('Password is required.', required),
+  },
+}))
+
+const v$ = useVuelidate(rules, {
+  email,
+  password,
+})
+
 const handleLogin = async () => {
   errorMessage.value = ''
 
+  const isValid = await v$.value.$validate()
+
+  if (!isValid) return
+
   const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
+    email: email.value.trim(),
     password: password.value,
   })
 
@@ -46,8 +67,15 @@ const handleLogin = async () => {
               type="email"
               v-model="email"
               placeholder="jack@gmail.com"
-              required
+              :class="{
+                'border-red-500 focus-visible:ring-red-500': v$.email.$error,
+              }"
+              @blur="v$.email.$touch()"
             />
+
+            <p v-if="v$.email.$error" class="text-xs text-red-500">
+              {{ v$.email.$errors[0]?.$message }}
+            </p>
           </div>
 
           <!-- Password -->
@@ -60,8 +88,15 @@ const handleLogin = async () => {
               type="password"
               v-model="password"
               placeholder="Enter your password"
-              required
+              :class="{
+                'border-red-500 focus-visible:ring-red-500': v$.password.$error,
+              }"
+              @blur="v$.password.$touch()"
             />
+
+            <p v-if="v$.password.$error" class="text-xs text-red-500">
+              {{ v$.password.$errors[0]?.$message }}
+            </p>
           </div>
 
           <!-- Login Button -->

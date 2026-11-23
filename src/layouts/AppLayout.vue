@@ -2,15 +2,42 @@
 import { RouterView } from 'vue-router'
 import AppNavigation from '@/components/Layout/AppNavigation.vue'
 import { useAuthStore } from '@/stores/auth'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const authStore = useAuthStore()
+
+const isSidebarCollapsed = ref(false)
+
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
+
+const handleViewportChange = () => {
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches
+
+  if (!isDesktop) {
+    isSidebarCollapsed.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleViewportChange)
+  handleViewportChange()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleViewportChange)
+})
 </script>
 
 <template>
   <div class="min-h-screen bg-white">
-    <AppNavigation />
+    <AppNavigation :is-collapsed="isSidebarCollapsed" @toggle-sidebar="toggleSidebar" />
 
-    <div class="lg:ml-64">
+    <div
+      :class="isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'"
+      class="transition-[margin] duration-300 ease-in-out"
+    >
       <div v-if="authStore.isLoading" class="p-4">Loading user profile...</div>
 
       <div v-else-if="authStore.profile" class="px-4 py-2 text-sm text-slate-600">
@@ -22,7 +49,11 @@ const authStore = useAuthStore()
         {{ authStore.errorMessage }}
       </div>
     </div>
-    <main class="min-w-0 flex-1 lg:ml-64">
+
+    <main
+      :class="isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'"
+      class="min-w-0 flex-1 transition-[margin] duration-300 ease-in-out"
+    >
       <RouterView />
     </main>
   </div>
