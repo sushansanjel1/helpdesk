@@ -1,4 +1,4 @@
-export interface TicketRow {
+export type TicketRow = {
   id: number
   subject: string
   description: string
@@ -9,14 +9,14 @@ export interface TicketRow {
   assignee: string | null
   assignee_id: string | null
   created_at: string
-  user_id: string
+  user_id: string | null
 }
 
 /**
  * Represents a ticket used throughout the Vue application.
  * Uses camelCase naming.
  */
-export interface Ticket {
+export type Ticket = {
   id: number
   subject: string
   description: string
@@ -27,7 +27,7 @@ export interface Ticket {
   assignee: string | null
   assigneeId: string | null
   createdAt: string
-  userId: string
+  userId: string | null
 }
 
 export type TicketStatusAction = {

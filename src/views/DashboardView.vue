@@ -5,7 +5,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue'
 import TicketTableSkeleton from '@/components/skeleton/TicketTableSkeleton.vue'
 import TicketStatusChart from '@/components/dashboard/TicketStatusChart.vue'
 import TicketCreationChart from '@/components/dashboard/TicketCreationChart.vue'
-import { useTickets } from '@/composable/ticket/ticket'
+import { useTickets } from '@/composable/ticket/useTickets'
 import { useAuthStore } from '@/stores/auth'
 
 const { tickets, fetchTickets, isFetching } = useTickets()

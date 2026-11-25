@@ -1,8 +1,8 @@
 import { ref, computed } from 'vue'
 import { useVuelidate } from '@vuelidate/core'
-import { required, minLength, helpers } from '@vuelidate/validators'
-
+import { required, helpers } from '@vuelidate/validators'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
+import { hasMeaningfulText } from '@/utils/textChecker'
 
 export function useCreateTicket(saveTicket: (ticket: CreateTicketInput) => Promise<Ticket | null>) {
   // Form state
@@ -18,11 +18,19 @@ export function useCreateTicket(saveTicket: (ticket: CreateTicketInput) => Promi
   // Validation rules
   const rules = computed(() => ({
     subject: {
-      required,
-      minLength: helpers.withMessage('Subject must be at least 5 characters', minLength(5)),
+      required: helpers.withMessage(
+        'Please enter a subject.',
+        (value: string) => value.trim().length > 0,
+      ),
+      minLength: helpers.withMessage(
+        'Subject must be at least 5 characters',
+        (value: string) => value.trim().length >= 5,
+      ),
     },
     description: {
-      required,
+      required: helpers.withMessage('Please enter a description.', (value: string) =>
+        hasMeaningfulText(value),
+      ),
     },
     category: {
       required: helpers.withMessage('Please select a category.', required),

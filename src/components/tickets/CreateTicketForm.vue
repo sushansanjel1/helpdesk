@@ -13,13 +13,10 @@ import {
   FieldLabel,
   FieldGroup,
 } from '@/components/ui'
-
 import { QuillEditor } from '@vueup/vue-quill'
 import { LoaderCircle } from 'lucide-vue-next'
-
 import UIImageUploader from '../lib/UIImageUploader.vue'
 import UIImagePreview from '../lib/UIImagePreview.vue'
-
 import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_TYPES } from '@/constants/ticket'
 
 type ValidationField = {

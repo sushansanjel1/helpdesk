@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { useRoute, RouterLink } from 'vue-router'
-import { useTickets } from '@/composable/ticket/ticket'
-import { Button } from '@/components/ui'
 import { computed, onMounted, ref, watch } from 'vue'
+import { Button } from '@/components/ui'
+import { useTickets } from '@/composable/ticket/useTickets'
 import { useAuthStore } from '@/stores/auth'
 import type { Ticket } from '@/types/ticket'
 import { useCsrs } from '@/composable/profile'
 import { getAvailableStatusActions } from '@/utils/ticketStatus'
+import TicketHeader from '@/components/tickets/details/TicketHeader.vue'
+import TicketDescription from '@/components/tickets/details/TicketDescription.vue'
+import TicketDetailsSidebar from '@/components/tickets/details/TicketDetailsSidebar.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -14,12 +17,25 @@ const {
   tickets,
   isFetching,
   isUpdating,
+  isUpdatingSubject,
   updateTicketStatus,
+  updateTicketSubject,
   fetchError,
   fetchTickets,
   assignTicket,
   isAssigning,
+  isUpdatingDescription,
+  updateTicketDescription,
+  isUpdatingPriority,
+  updateTicketPriority,
+  reporterName,
+  isFetchingReporterName,
+  fetchReporterName,
 } = useTickets()
+
+const descriptionEditor = ref<{
+  closeEditor: () => void
+} | null>(null)
 
 const { csrs, isFetchingCsrs, fetchCsrs } = useCsrs()
 
@@ -40,11 +56,29 @@ watch(
   { immediate: true },
 )
 
-//Assign ticket to the selected CSR.
-const handleAssignment = async () => {
-  if (!ticket.value || !selectedCsrId.value) return
+watch(
+  ticket,
+  (currentTicket, previousTicket) => {
+    if (currentTicket && currentTicket.id !== previousTicket?.id) {
+      fetchReporterName(currentTicket.id)
+    }
+  },
+  { immediate: true },
+)
+// Assign, reassign, or unassign a ticket
+const handleAssignment = async (assigneeId: string | null) => {
+  if (!ticket.value) return
 
-  await assignTicket(ticket.value.id, selectedCsrId.value)
+  const currentTicket = ticket.value
+
+  const updatedTicket = await assignTicket(currentTicket.id, assigneeId)
+
+  if (updatedTicket) {
+    selectedCsrId.value = updatedTicket.assigneeId ?? ''
+  } else {
+    // Restore the previous selection if the request fails
+    selectedCsrId.value = currentTicket.assigneeId ?? ''
+  }
 }
 
 const availableActions = computed(() => {
@@ -60,6 +94,28 @@ const handleStatusChange = async (status: Ticket['status']) => {
   await updateTicketStatus(ticket.value.id, status)
 }
 
+const handlePriorityChange = async (priority: Ticket['priority']) => {
+  if (!ticket.value) return
+
+  await updateTicketPriority(ticket.value.id, priority)
+}
+
+const handleSubjectSave = async (subject: string) => {
+  if (!ticket.value) return
+
+  await updateTicketSubject(ticket.value.id, subject)
+}
+
+const handleDescriptionSave = async (description: string) => {
+  if (!ticket.value) return
+
+  const updatedTicket = await updateTicketDescription(ticket.value.id, description)
+
+  if (updatedTicket) {
+    descriptionEditor.value?.closeEditor()
+  }
+}
+//Initial data fetching
 onMounted(() => {
   fetchTickets()
 
@@ -69,119 +125,79 @@ onMounted(() => {
 })
 </script>
 <template>
-  <main class="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-5xl space-y-6">
-      <!-- Back button -->
+  <main class="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl space-y-6">
+      <!-- Back navigation -->
       <RouterLink to="/tickets">
-        <Button yclass="mb-2"> Back to Tickets </Button>
+        <Button size="sm" class="mb-4"> ← Back to Tickets </Button>
       </RouterLink>
 
-      <!-- Loading -->
-      <div v-if="isFetching">Loading ticket details...</div>
+      <!-- Loading and error states -->
+      <div v-if="isFetching" class="py-12 text-center text-muted-foreground">
+        Loading ticket details...
+      </div>
 
-      <!-- Error -->
-      <div v-else-if="fetchError">
+      <div
+        v-else-if="fetchError"
+        class="rounded-lg border border-destructive/30 p-5 text-sm text-destructive"
+      >
         {{ fetchError }}
       </div>
 
-      <!-- Invalid ID -->
-      <div v-else-if="!Number.isInteger(ticketId) || ticketId <= 0">Invalid ticket ID.</div>
+      <div
+        v-else-if="!Number.isInteger(ticketId) || ticketId <= 0"
+        class="py-12 text-center text-muted-foreground"
+      >
+        Invalid ticket ID.
+      </div>
 
-      <!-- Ticket not found -->
-      <div v-else-if="!ticket">Ticket not found.</div>
+      <div v-else-if="!ticket" class="py-12 text-center text-muted-foreground">
+        Ticket not found.
+      </div>
 
-      <!-- Ticket Details -->
-      <div v-else class="space-y-6">
-        <section class="rounded-xl border border-slate-200 p-6">
-          <p class="text-sm text-slate-500">Ticket #{{ ticket.id }}</p>
+      <!-- Ticket details layout -->
+      <div v-else class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <!-- Main content -->
+        <div class="min-w-0">
+          <!-- Ticket header -->
+          <TicketHeader :ticket="ticket" :is-saving="isUpdatingSubject" @save="handleSubjectSave" />
 
-          <h1 class="mt-2 text-2xl font-bold text-slate-900">
-            {{ ticket.subject }}
-          </h1>
+          <!-- <div class="border-t" /> -->
 
-          <p class="mt-4 leading-7 text-slate-600" v-html="ticket.description"></p>
-        </section>
+          <!-- Description -->
+          <TicketDescription
+            ref="descriptionEditor"
+            :description="ticket.description"
+            :is-saving="isUpdatingDescription"
+            @save="handleDescriptionSave"
+          />
 
-        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-xl border border-slate-200 p-4">
-            <p class="text-sm text-slate-500">Status</p>
-            <p class="mt-2 font-semibold capitalize">
-              {{ ticket.status.replace('-', ' ') }}
-            </p>
-          </div>
+          <!-- Attachments and comments will be added here -->
+        </div>
 
-          <div class="rounded-xl border border-slate-200 p-4">
-            <p class="text-sm text-slate-500">Priority</p>
-            <p class="mt-2 font-semibold capitalize">
-              {{ ticket.priority }}
-            </p>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 p-4">
-            <p class="text-sm text-slate-500">Category</p>
-            <p class="mt-2 font-semibold capitalize">
-              {{ ticket.category }}
-            </p>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 p-4">
-            <p class="text-sm text-slate-500">Assignee</p>
-            <p class="mt-2 font-semibold">
-              {{ ticket.assignee ?? 'Unassigned' }}
-            </p>
-          </div>
-        </section>
-
-        <!-- Ticket Assignment: Manager only -->
-        <section v-if="authStore.isManager" class="rounded-xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-900">Manage Ticket Assignment</h2>
-
-          <div class="mt-4 space-y-4">
-            <div>
-              <label for="csr" class="mb-2 block text-sm font-medium text-slate-700">
-                Assign to CSR
-              </label>
-
-              <select
-                id="csr"
-                v-model="selectedCsrId"
-                :disabled="isFetchingCsrs || isAssigning"
-                class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="" disabled>
-                  {{ isFetchingCsrs ? 'Loading CSRs...' : 'Select a CSR' }}
-                </option>
-
-                <option v-for="csr in csrs" :key="csr.id" :value="csr.id">
-                  {{ csr.full_name || 'Unnamed CSR' }}
-                </option>
-              </select>
-            </div>
-
-            <Button
-              :disabled="!selectedCsrId || isAssigning || isFetchingCsrs"
-              @click="handleAssignment"
-            >
-              {{ isAssigning ? 'Assigning...' : 'Assign Ticket' }}
-            </Button>
-          </div>
-        </section>
-
-        <!-- Status Actions: Admin and Manager only -->
-        <section v-if="availableActions.length" class="rounded-xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-900">Manage Ticket Status</h2>
-
-          <div class="mt-4 flex flex-wrap gap-3">
-            <Button
-              v-for="action in availableActions"
-              :key="action.status"
-              :disabled="isUpdating"
-              @click="handleStatusChange(action.status)"
-            >
-              {{ isUpdating ? 'Updating...' : action.label }}
-            </Button>
-          </div>
-        </section>
+        <!-- Right sidebar -->
+        <div class="min-w-0 lg:border-l lg:pl-7">
+          <TicketDetailsSidebar
+            :ticket="ticket"
+            :csrs="csrs"
+            :is-manager="authStore.isManager"
+            :is-admin="authStore.isAdmin"
+            :current-user-id="authStore.profile?.id ?? null"
+            :can-manage-tickets="authStore.canManageTickets"
+            :is-fetching-csrs="isFetchingCsrs"
+            :is-assigning="isAssigning"
+            :is-updating="isUpdating"
+            :is-updating-priority="isUpdatingPriority"
+            :available-actions="availableActions"
+            :selected-csr-id="selectedCsrId"
+            @update:selected-csr-id="selectedCsrId = $event"
+            @status-change="handleStatusChange"
+            @priority-change="handlePriorityChange"
+            @assign="handleAssignment"
+            :reporter-name="reporterName"
+            :is-fetching-reporter-name="isFetchingReporterName"
+          />
+        </div>
       </div>
     </div>
   </main>

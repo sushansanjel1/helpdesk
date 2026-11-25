@@ -33,6 +33,18 @@ export const ticketService = {
 
     return data.map(mapTicket)
   },
+  // Fetch the original creator's name through the secure RPC
+  async getReporterName(ticketId: number): Promise<string | null> {
+    const { data, error } = await supabase.rpc('get_ticket_reporter', {
+      p_ticket_id: ticketId,
+    })
+
+    if (error) {
+      throw new Error(`Failed to fetch ticket reporter: ${error.message}`)
+    }
+
+    return data
+  },
 
   async create(ticket: CreateTicketInput): Promise<Ticket> {
     const {
@@ -98,19 +110,71 @@ export const ticketService = {
     return mapTicket(data)
   },
 
-  // Assign or reassign a ticket (Manager only)
-  async assignTicket(id: number, assigneeId: string): Promise<Ticket> {
+  //Update Subject
+  async updateSubject(id: number, subject: string): Promise<Ticket> {
+    const { data, error } = await supabase.rpc('update_ticket_subject', {
+      p_ticket_id: id,
+      p_subject: subject,
+    })
+
+    if (error) {
+      throw new Error(`Failed to update ticket subject: ${error.message}`)
+    }
+
+    if (!data) {
+      throw new Error('Ticket not found or could not be updated.')
+    }
+
+    return mapTicket(data)
+  },
+
+  async updateDescription(id: number, description: string): Promise<Ticket> {
+    const { data, error } = await supabase.rpc('update_ticket_description', {
+      p_ticket_id: id,
+      p_description: description,
+    })
+
+    if (error) {
+      throw new Error(`Failed to update ticket description: ${error.message}`)
+    }
+
+    if (!data) {
+      throw new Error('Ticket not found or could not be updated.')
+    }
+
+    return mapTicket(data)
+  },
+
+  async updatePriority(id: number, priority: Ticket['priority']): Promise<Ticket> {
+    const { data, error } = await supabase.rpc('update_ticket_priority', {
+      p_ticket_id: id,
+      p_priority: priority,
+    })
+
+    if (error) {
+      throw new Error(`Failed to update ticket priority: ${error.message}`)
+    }
+
+    if (!data) {
+      throw new Error('Ticket not found or you do not have permission to change its priority.')
+    }
+
+    return mapTicket(data)
+  },
+
+  // Assign, reassign, or unassign a ticket
+  async assignTicket(id: number, assigneeId: string | null): Promise<Ticket> {
     const { data, error } = await supabase.rpc('assign_ticket', {
       p_ticket_id: id,
       p_assignee_id: assigneeId,
     })
 
     if (error) {
-      throw new Error(`Failed to assign ticket: ${error.message}`)
+      throw new Error(`Failed to update ticket assignment: ${error.message}`)
     }
 
     if (!data) {
-      throw new Error('Ticket not found or could not be assigned.')
+      throw new Error('Ticket not found or assignment could not be updated.')
     }
 
     return mapTicket(data)

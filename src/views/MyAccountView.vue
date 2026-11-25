@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'vue-sonner'
 import ProfileHeader from '@/components/account/ProfileHeader.vue'
@@ -20,7 +20,6 @@ const handleProfileUpdate = async (data: { fullName: string }) => {
     toast.error(message)
   }
 }
-// Cancel Editing
 const handleCancel = () => {
   isEditing.value = false
 }

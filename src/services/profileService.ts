@@ -1,9 +1,5 @@
 import { supabase } from '@/lib/supabase'
-
-export interface CSRProfile {
-  id: string
-  full_name: string | null
-}
+import type { CSRProfile } from '@/types/auth'
 
 export const profileService = {
   /**

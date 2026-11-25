@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import type { Ticket, CreateTicketInput } from '@/types/ticket'
-import { useTickets } from '@/composable/ticket/ticket'
+import { useTickets } from '@/composable/ticket/useTickets'
 import { useAuthStore } from '@/stores/auth'
 import CreateTicketModal from '@/components/tickets/CreateTicketModal.vue'
 import TicketFilters from '@/components/tickets/TicketFilters.vue'

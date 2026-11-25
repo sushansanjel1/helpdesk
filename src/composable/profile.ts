@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { profileService } from '@/services/profileService'
-import type { CSRProfile } from '@/services/profileService'
+import type { CSRProfile } from '@/types/auth'
 
 export const useCsrs = () => {
   const csrs = ref<CSRProfile[]>([])
