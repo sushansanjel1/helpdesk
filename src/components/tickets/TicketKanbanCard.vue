@@ -2,6 +2,7 @@
 import type { Ticket } from '@/types/ticket'
 import { RouterLink } from 'vue-router'
 import { Badge } from '../ui'
+import RelativeTime from '@/components/lib/RelativeTime.vue'
 
 defineProps<{
   ticket: Ticket
@@ -18,15 +19,6 @@ const getPriorityVariant = (priority: string) => {
     default:
       return 'secondary'
   }
-}
-
-//Format ticket creation date
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }
 </script>
 
@@ -65,7 +57,7 @@ const formatDate = (date: string) => {
       </span>
 
       <span class="shrink-0">
-        {{ formatDate(ticket.createdAt) }}
+        <RelativeTime :timestamp="ticket.createdAt" />
       </span>
     </div>
   </RouterLink>

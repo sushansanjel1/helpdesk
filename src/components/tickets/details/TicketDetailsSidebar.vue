@@ -4,6 +4,7 @@ import type { CSRProfile } from '@/types/auth'
 import { TICKET_PRIORITIES } from '@/constants/ticket'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui'
 import { computed } from 'vue'
+import RelativeTime from '@/components/lib/RelativeTime.vue'
 
 const props = defineProps<{
   ticket: Ticket
@@ -241,7 +242,7 @@ function handleAssignmentSelection(value: unknown) {
         <p class="text-xs text-muted-foreground">Created</p>
 
         <p class="text-sm font-medium text-foreground">
-          {{ new Date(ticket.createdAt).toLocaleDateString() }}
+          <RelativeTime :timestamp="ticket.createdAt" />
         </p>
       </div>
     </section>

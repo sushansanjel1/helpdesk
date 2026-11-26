@@ -6,6 +6,7 @@ import { sanitizeRichText } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
 import type { TicketComment as TicketCommentType } from '@/types/comment'
 import { hasMeaningfulText } from '@/utils/textChecker'
+import RelativeTime from '@/components/lib/RelativeTime.vue'
 import CommentEditor from './CommentEditor.vue'
 
 const props = defineProps<{
@@ -43,8 +44,6 @@ const authorAvatar = (comment: TicketCommentType) =>
 
 const authorInitial = (comment: TicketCommentType) =>
   authorName(comment).charAt(0).toUpperCase() || 'U'
-
-const formattedDate = (createdAt: string) => new Date(createdAt).toLocaleString()
 
 const canSubmit = computed(() => hasMeaningfulText(draft.value))
 
@@ -107,9 +106,10 @@ const submitComment = async () => {
         <div class="min-w-0 flex-1">
           <div class="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <span class="text-sm font-medium">{{ authorName(comment) }}</span>
-            <time :datetime="comment.createdAt" class="text-xs text-muted-foreground">
-              {{ formattedDate(comment.createdAt) }}
-            </time>
+            <RelativeTime
+              :timestamp="comment.createdAt"
+              class="text-xs text-muted-foreground"
+            />
           </div>
           <div
             class="comment-content text-sm leading-6"
