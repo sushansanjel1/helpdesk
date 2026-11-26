@@ -13,10 +13,10 @@ import {
   FieldLabel,
   FieldGroup,
 } from '@/components/ui'
-import { QuillEditor } from '@vueup/vue-quill'
 import { LoaderCircle } from 'lucide-vue-next'
 import UIImageUploader from '../lib/UIImageUploader.vue'
 import UIImagePreview from '../lib/UIImagePreview.vue'
+import TiptapRichTextEditor from './TiptapRichTextEditor.vue'
 import {
   MAX_TICKET_IMAGE_ATTACHMENTS,
   TICKET_CATEGORIES,
@@ -92,16 +92,14 @@ const imagesModel = computed({
       <Field class="gap-2">
         <FieldLabel for="description" class="font-medium text-slate-700"> Description </FieldLabel>
 
-        <QuillEditor
-          theme="snow"
+        <TiptapRichTextEditor
           id="description"
           :content="props.description"
           @update:content="emit('update:description', $event)"
-          content-type="html"
-          toolbar="minimal"
           placeholder="Describe what happened and what you were trying to do..."
-          class="min-h-32 resize-y border-slate-200 focus-visible:ring-blue-500"
-          :class="{ 'border-red-500 focus-visible:ring-red-500': props.v$.description.$error }"
+          editor-class="min-h-32"
+          class="min-h-32 border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500"
+          :class="{ 'border-red-500 focus-within:ring-red-500': props.v$.description.$error }"
           @blur="props.v$.description.$touch"
         />
 

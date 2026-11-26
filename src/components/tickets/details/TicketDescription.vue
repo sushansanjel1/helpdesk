@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
 import { Button } from '@/components/ui'
 import { sanitizeRichText } from '@/lib/utils'
 import { hasMeaningfulText } from '@/utils/textChecker'
+import TiptapRichTextEditor from '@/components/tickets/TiptapRichTextEditor.vue'
 
 const props = defineProps<{
   description: string
@@ -64,7 +64,7 @@ defineExpose({
         class="cursor-pointer rounded-md text-sm leading-5 transition hover:bg-slate-100"
         @click="startEditing"
       >
-        <div class="ql-editor p-0 text-sm leading-5" v-html="safeDescription" />
+        <div class="description-content text-sm leading-5" v-html="safeDescription" />
       </div>
 
       <p
@@ -78,13 +78,12 @@ defineExpose({
 
     <!-- Editing mode -->
     <div v-else class="space-y-3 rounded-lg border border-input p-3">
-      <QuillEditor
+      <TiptapRichTextEditor
         v-model:content="editedDescription"
-        theme="snow"
-        content-type="html"
-        toolbar="minimal"
         placeholder="Add a description..."
-        class="min-h-32"
+        editor-class="min-h-32"
+        :disabled="isSaving"
+        auto-focus
       />
 
       <div class="flex justify-end gap-2">
@@ -105,3 +104,33 @@ defineExpose({
     <slot />
   </section>
 </template>
+
+<style scoped>
+.description-content :deep(p) {
+    margin: 0 0 0.5rem;
+}
+
+.description-content :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.description-content :deep(ul),
+.description-content :deep(ol) {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.description-content :deep(ul),
+.description-content :deep(ol > li[data-list='bullet']) {
+    list-style-type: disc;
+}
+
+.description-content :deep(ol),
+.description-content :deep(ol > li[data-list='ordered']) {
+    list-style-type: decimal;
+}
+
+.description-content :deep(.ql-ui) {
+    display: none;
+}
+</style>

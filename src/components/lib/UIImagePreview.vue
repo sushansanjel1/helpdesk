@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { X } from 'lucide-vue-next'
+import { Trash2 } from 'lucide-vue-next'
 
 interface Props {
   multiple?: boolean
@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
           class="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white transition hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           @click="removeImage(index)"
         >
-          <X class="size-4" aria-hidden="true" />
+          <Trash2 class="size-4" aria-hidden="true" />
         </button>
 
         <!-- Filename -->

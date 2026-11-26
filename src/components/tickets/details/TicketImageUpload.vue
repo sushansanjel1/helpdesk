@@ -9,8 +9,9 @@ import {
   DialogTrigger,
 } from '@/components/ui'
 import { MAX_TICKET_IMAGE_ATTACHMENTS } from '@/constants/ticket'
-import { X } from 'lucide-vue-next'
+import { Trash2 } from 'lucide-vue-next'
 import UIImageUploader from '@/components/lib/UIImageUploader.vue'
+import ImagePreviewLightbox from '@/components/lib/ImagePreviewLightbox.vue'
 import type { TicketAttachment } from '@/services/ticketAttachmentService'
 
 const props = defineProps<{
@@ -24,6 +25,7 @@ const props = defineProps<{
 
 const files = defineModel<File[]>('files', { default: () => [] })
 const isDialogOpen = ref(false)
+const selectedPreview = ref<TicketAttachment | null>(null)
 const canAddImage = computed(
   () =>
     !props.isLoading &&
@@ -57,6 +59,18 @@ watch(isDialogOpen, (isOpen) => {
     files.value = []
   }
 })
+
+watch(
+  () => props.attachments,
+  (attachments) => {
+    if (
+      selectedPreview.value &&
+      !attachments.some((attachment) => attachment.id === selectedPreview.value?.id)
+    ) {
+      selectedPreview.value = null
+    }
+  },
+)
 
 function uploadFiles() {
   if (!canAddImage.value || files.value.length === 0) return
@@ -113,20 +127,28 @@ function uploadFiles() {
         :key="attachment.id"
         class="group relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
       >
-        <a
-          :href="attachment.signedUrl"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          :aria-label="`Preview ${attachment.file_name}`"
           :title="attachment.file_name"
+          class="block w-full cursor-zoom-in text-left"
+          @click="selectedPreview = attachment"
         >
           <img
             :src="attachment.signedUrl"
             :alt="attachment.file_name"
             class="h-40 w-full object-cover"
           />
-          <div class="truncate px-3 py-2 text-xs text-muted-foreground">
-            {{ attachment.file_name }}
-          </div>
+        </button>
+
+        <a
+          :href="attachment.signedUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="attachment.file_name"
+          class="block truncate px-3 py-2 text-xs text-muted-foreground"
+        >
+          {{ attachment.file_name }}
         </a>
 
         <button
@@ -138,10 +160,16 @@ function uploadFiles() {
           class="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white opacity-100 transition hover:bg-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
           @click.stop="emit('remove', attachment)"
         >
-          <X class="size-4" aria-hidden="true" />
+          <Trash2 class="size-4" aria-hidden="true" />
         </button>
       </div>
     </div>
 
+    <ImagePreviewLightbox
+      :open="selectedPreview !== null"
+      :src="selectedPreview?.signedUrl ?? ''"
+      :alt="selectedPreview?.file_name ?? 'Ticket image'"
+      @close="selectedPreview = null"
+    />
   </section>
 </template>
