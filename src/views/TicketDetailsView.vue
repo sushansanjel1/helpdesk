@@ -1,16 +1,19 @@
 <script lang="ts" setup>
 import { useRoute, RouterLink } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui'
 import { useTickets } from '@/composable/ticket/useTickets'
 import { useAuthStore } from '@/stores/auth'
 import type { Ticket } from '@/types/ticket'
 import { useCsrs } from '@/composable/profile'
 import { getAvailableStatusActions } from '@/utils/ticketStatus'
+import { MAX_TICKET_IMAGE_ATTACHMENTS } from '@/constants/ticket'
 import TicketHeader from '@/components/tickets/details/TicketHeader.vue'
 import TicketDescription from '@/components/tickets/details/TicketDescription.vue'
 import TicketImageUpload from '@/components/tickets/details/TicketImageUpload.vue'
 import TicketDetailsSidebar from '@/components/tickets/details/TicketDetailsSidebar.vue'
+import TicketComments from '@/components/tickets/TicketComments.vue'
 import { ticketAttachmentService, type TicketAttachment } from '@/services/ticketAttachmentService'
 
 const route = useRoute()
@@ -51,7 +54,7 @@ const isFetchingAttachments = ref(false)
 const attachmentError = ref<string | null>(null)
 const selectedAttachmentFiles = ref<File[]>([])
 const isUploadingAttachments = ref(false)
-const attachmentUploadError = ref<string | null>(null)
+const deletingAttachmentId = ref<string | null>(null)
 
 const fetchAttachments = async (id: number) => {
   isFetchingAttachments.value = true
@@ -69,20 +72,45 @@ const fetchAttachments = async (id: number) => {
 }
 
 const handleAttachmentUpload = async (files: File[]) => {
-  if (!ticket.value || isUploadingAttachments.value) return
+  if (!ticket.value || isUploadingAttachments.value || isFetchingAttachments.value) return
+
+  if (attachmentError.value) {
+    toast.error('Unable to verify the current image count. Please try again.')
+    return
+  }
+
+  if (attachments.value.length + files.length > MAX_TICKET_IMAGE_ATTACHMENTS) {
+    toast.error(`A ticket can have up to ${MAX_TICKET_IMAGE_ATTACHMENTS} images.`)
+    return
+  }
 
   isUploadingAttachments.value = true
-  attachmentUploadError.value = null
 
   try {
     await ticketAttachmentService.upload(ticket.value.id, files)
     selectedAttachmentFiles.value = []
     await fetchAttachments(ticket.value.id)
+    toast.success('Image uploaded successfully.')
   } catch (error: unknown) {
-    attachmentUploadError.value =
-      error instanceof Error ? error.message : 'Failed to upload ticket images.'
+    toast.error(error instanceof Error ? error.message : 'Failed to upload ticket image.')
   } finally {
     isUploadingAttachments.value = false
+  }
+}
+
+const handleAttachmentRemove = async (attachment: TicketAttachment) => {
+  if (deletingAttachmentId.value) return
+
+  deletingAttachmentId.value = attachment.id
+
+  try {
+    await ticketAttachmentService.remove(attachment)
+    await fetchAttachments(attachment.ticket_id)
+    toast.success('Image removed successfully.')
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : 'Failed to remove ticket image.')
+  } finally {
+    deletingAttachmentId.value = null
   }
 }
 
@@ -166,6 +194,7 @@ const handleDescriptionSave = async (description: string) => {
     descriptionEditor.value?.closeEditor()
   }
 }
+
 //Initial data fetching
 onMounted(() => {
   fetchTickets()
@@ -228,10 +257,14 @@ onMounted(() => {
               :is-loading="isFetchingAttachments"
               :error="attachmentError"
               :is-uploading="isUploadingAttachments"
-              :upload-error="attachmentUploadError"
+              :current-user-id="authStore.profile?.id ?? null"
+              :deleting-attachment-id="deletingAttachmentId"
               @upload="handleAttachmentUpload"
+              @remove="handleAttachmentRemove"
             />
           </TicketDescription>
+
+          <TicketComments :ticket-id="ticket.id" />
         </div>
 
         <!-- Right sidebar -->

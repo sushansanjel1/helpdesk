@@ -1,3 +1,5 @@
+export const MAX_TICKET_IMAGE_ATTACHMENTS = 5
+
 export const TICKET_CATEGORIES = [
   { label: 'Technical Issue', value: 'technical' },
   { label: 'Account & login', value: 'account' },

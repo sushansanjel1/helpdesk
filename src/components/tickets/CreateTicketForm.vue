@@ -17,7 +17,12 @@ import { QuillEditor } from '@vueup/vue-quill'
 import { LoaderCircle } from 'lucide-vue-next'
 import UIImageUploader from '../lib/UIImageUploader.vue'
 import UIImagePreview from '../lib/UIImagePreview.vue'
-import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_TYPES } from '@/constants/ticket'
+import {
+  MAX_TICKET_IMAGE_ATTACHMENTS,
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+  TICKET_TYPES,
+} from '@/constants/ticket'
 
 type ValidationField = {
   $error: boolean
@@ -113,7 +118,12 @@ const imagesModel = computed({
       <Field class="gap-2">
         <FieldLabel for="images" class="font-medium text-slate-700"> Images </FieldLabel>
 
-        <UIImageUploader v-model="imagesModel" multiple :max-size="5" :max-files="5" />
+        <UIImageUploader
+          v-model="imagesModel"
+          multiple
+          :max-size="5"
+          :max-files="MAX_TICKET_IMAGE_ATTACHMENTS"
+        />
 
         <UIImagePreview v-if="imagesModel.length" v-model="imagesModel" multiple class="mt-3" />
       </Field>
