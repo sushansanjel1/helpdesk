@@ -4,7 +4,9 @@ import { required, helpers } from '@vuelidate/validators'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
 import { hasMeaningfulText } from '@/utils/textChecker'
 
-export function useCreateTicket(saveTicket: (ticket: CreateTicketInput) => Promise<Ticket | null>) {
+export function useCreateTicket(
+  saveTicket: (ticket: CreateTicketInput, images: File[]) => Promise<Ticket | null>,
+) {
   // Form state
   const subject = ref('')
   const description = ref('')
@@ -69,7 +71,7 @@ export function useCreateTicket(saveTicket: (ticket: CreateTicketInput) => Promi
   }
 
   // Submit ticket
-  async function createTicket(): Promise<boolean> {
+  async function createTicket(images: File[] = []): Promise<boolean> {
     if (isSaving.value) return false
 
     const isValid = await v$.value.$validate()
@@ -86,7 +88,7 @@ export function useCreateTicket(saveTicket: (ticket: CreateTicketInput) => Promi
         type: type.value,
       }
 
-      const savedTicket = await saveTicket(newTicket)
+      const savedTicket = await saveTicket(newTicket, images)
 
       if (!savedTicket) return false
 

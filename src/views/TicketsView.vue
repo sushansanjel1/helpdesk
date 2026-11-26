@@ -34,8 +34,11 @@ const selectedPriority = ref<string[]>([])
 const totalNoOfTickets = computed(() => tickets.value.length)
 
 // Ticket creation
-const handleSaveTicket = async (ticket: CreateTicketInput): Promise<Ticket | null> => {
-  return await addTicket(ticket)
+const handleSaveTicket = async (
+  ticket: CreateTicketInput,
+  images: File[],
+): Promise<Ticket | null> => {
+  return await addTicket(ticket, images)
 }
 
 // Receive filter changes

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
+import { Upload } from 'lucide-vue-next'
 
 interface Props {
   multiple?: boolean
@@ -21,33 +22,42 @@ const model = defineModel<File[] | File | null>({
   default: () => [],
 })
 
-const emit = defineEmits<{
-  uploaded: [files: File[]]
-}>()
-
 const isDragging = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 const errorMessage = ref('')
-
-interface ImagePreview {
-  file: File
-  url: string
-}
-
-const previews = ref<ImagePreview[]>([])
 
 const currentFiles = computed<File[]>(() => {
   if (!model.value) return []
   return Array.isArray(model.value) ? model.value : [model.value]
 })
 
-function syncPreviews() {
-  previews.value.forEach((preview) => URL.revokeObjectURL(preview.url))
+const acceptedTypes = computed(() =>
+  props.accept
+    .split(',')
+    .map((type) => type.trim().toLowerCase())
+    .filter(Boolean),
+)
 
-  previews.value = currentFiles.value.map((file) => ({
-    file,
-    url: URL.createObjectURL(file),
-  }))
+const acceptedFormats = computed(() => {
+  if (!acceptedTypes.value.length) return 'All image formats'
+
+  return acceptedTypes.value
+    .map((type) => (type.startsWith('image/') ? type.slice('image/'.length) : type))
+    .join(', ')
+    .toUpperCase()
+})
+
+function isAcceptedType(file: File): boolean {
+  const fileType = file.type.toLowerCase()
+  const fileName = file.name.toLowerCase()
+
+  if (!acceptedTypes.value.length) return true
+
+  return acceptedTypes.value.some((type) => {
+    if (type.startsWith('.')) return fileName.endsWith(type)
+    if (type.endsWith('/*')) return fileType.startsWith(type.slice(0, -1))
+    return fileType === type
+  })
 }
 
 function openFilePicker() {
@@ -62,6 +72,16 @@ function handleDragOver(event: DragEvent) {
 
 function handleDragLeave(event: DragEvent) {
   event.preventDefault()
+
+  const dropzone = event.currentTarget
+  if (
+    dropzone instanceof HTMLElement &&
+    event.relatedTarget instanceof Node &&
+    dropzone.contains(event.relatedTarget)
+  ) {
+    return
+  }
+
   isDragging.value = false
 }
 
@@ -86,71 +106,79 @@ function handleFileChange(event: Event) {
 }
 
 function processFiles(files: File[]) {
-  errorMessage.value = ''
-
   if (!files.length) return
 
   const validFiles: File[] = []
+  const errors: string[] = []
 
   for (const file of files) {
-    if (!file.type.startsWith('image/')) {
-      errorMessage.value = `${file.name} is not an image.`
+    if (!file.type.toLowerCase().startsWith('image/')) {
+      errors.push(`${file.name} is not an image.`)
+      continue
+    }
+
+    if (!isAcceptedType(file)) {
+      errors.push(`${file.name} has an unsupported image format.`)
       continue
     }
 
     if (file.size > props.maxSize * 1024 * 1024) {
-      errorMessage.value = `${file.name} exceeds ${props.maxSize}MB.`
+      errors.push(`${file.name} exceeds ${props.maxSize}MB.`)
       continue
     }
 
     validFiles.push(file)
   }
 
-  if (!validFiles.length) return
+  const availableSlots = props.multiple
+    ? Math.max(0, props.maxFiles - currentFiles.value.length)
+    : 1
+  const acceptedFiles = validFiles.slice(0, availableSlots)
 
-  const nextFiles = props.multiple ? [...currentFiles.value, ...validFiles] : validFiles.slice(0, 1)
-
-  const limitedFiles = props.multiple ? nextFiles.slice(0, props.maxFiles) : nextFiles
-
-  if (nextFiles.length > props.maxFiles && props.multiple) {
-    errorMessage.value = `Maximum ${props.maxFiles} images allowed.`
+  if (validFiles.length > availableSlots) {
+    errors.push(
+      props.multiple
+        ? `Maximum ${props.maxFiles} images allowed.`
+        : 'Only one image can be selected.',
+    )
   }
 
-  updateModel(limitedFiles)
-  emit('uploaded', limitedFiles)
+  errorMessage.value = errors.join(' ')
+
+  if (!acceptedFiles.length) return
+
+  const nextFiles = props.multiple ? [...currentFiles.value, ...acceptedFiles] : acceptedFiles
+
+  model.value = props.multiple ? nextFiles : (nextFiles[0] ?? null)
 }
-
-function updateModel(files: File[]) {
-  model.value = props.multiple ? files : (files[0] ?? null)
-  syncPreviews()
-}
-
-// function removeFile(index: number) {
-//   if (props.disabled) return
-
-//   const updatedFiles = currentFiles.value.filter((_, i) => i !== index)
-//   updateModel(updatedFiles)
-//   errorMessage.value = ''
-// }
-
-onBeforeUnmount(() => {
-  previews.value.forEach((preview) => URL.revokeObjectURL(preview.url))
-})
 </script>
 
 <template>
   <div class="w-full space-y-3">
+    <input
+      ref="inputRef"
+      type="file"
+      :accept="accept"
+      :multiple="multiple"
+      class="hidden"
+      :disabled="disabled"
+      @click.stop
+      @change="handleFileChange"
+    />
+
     <!-- Dropzone -->
     <div
       role="button"
-      tabindex="0"
+      :tabindex="disabled ? -1 : 0"
       :aria-disabled="disabled"
+      aria-label="Choose or drop image files"
       class="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-colors"
       :class="[
-        isDragging
+        isDragging && !disabled
           ? 'border-primary bg-primary/5'
-          : 'border-muted-foreground/30 bg-muted/20 hover:border-primary/60 hover:bg-muted/40',
-        disabled ? 'cursor-not-allowed opacity-50' : '',
+          : disabled
+            ? 'cursor-not-allowed border-muted-foreground/30 bg-muted/20 opacity-50'
+            : 'border-muted-foreground/30 bg-muted/20 hover:border-primary/60 hover:bg-muted/40',
       ]"
       @click="openFilePicker"
       @keydown.enter.prevent="openFilePicker"
@@ -159,32 +187,8 @@ onBeforeUnmount(() => {
       @dragleave="handleDragLeave"
       @drop="handleDrop"
     >
-      <input
-        ref="inputRef"
-        type="file"
-        :accept="accept"
-        :multiple="multiple"
-        class="hidden"
-        :disabled="disabled"
-        @change="handleFileChange"
-      />
-
       <div class="mb-3 rounded-full bg-muted p-4">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <path d="m17 8-5-5-5 5" />
-          <path d="M12 3v12" />
-        </svg>
+        <Upload class="size-7" aria-hidden="true" />
       </div>
 
       <p class="text-sm font-semibold">
@@ -197,13 +201,13 @@ onBeforeUnmount(() => {
       </p>
 
       <p class="mt-3 text-xs text-muted-foreground">
-        {{ accept }} · Max {{ maxSize }}MB per image
+        {{ acceptedFormats }} · Max {{ maxSize }}MB per image
         <span v-if="multiple"> · Up to {{ maxFiles }} images</span>
       </p>
     </div>
 
     <!-- Error -->
-    <p v-if="errorMessage" class="text-sm text-destructive">
+    <p v-if="errorMessage" role="alert" class="text-sm text-destructive">
       {{ errorMessage }}
     </p>
   </div>

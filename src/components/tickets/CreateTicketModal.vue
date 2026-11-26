@@ -15,7 +15,7 @@ import CreateTicketForm from './CreateTicketForm.vue'
 
 // Save function provided by the parent component
 const props = defineProps<{
-  saveTicket: (ticket: CreateTicketInput) => Promise<Ticket | null>
+  saveTicket: (ticket: CreateTicketInput, images: File[]) => Promise<Ticket | null>
 }>()
 
 // Form state, validation, and submission logic
@@ -39,7 +39,7 @@ const isDialogOpen = ref(false)
 
 // Handle successful ticket creation
 async function handleCreateTicket() {
-  const isCreated = await createTicket()
+  const isCreated = await createTicket(images.value)
 
   if (isCreated) {
     isDialogOpen.value = false
@@ -52,11 +52,6 @@ async function handleDialogChange(isOpen: boolean) {
     await nextTick()
     resetValidation()
   }
-}
-
-// Handle uploaded images
-function handleUploaded(files: File[]) {
-  console.log('Images added:', files)
 }
 
 // Clear images when dialog closes
@@ -107,7 +102,6 @@ watch(isDialogOpen, (newValue) => {
           :v$="v$"
           @submit="handleCreateTicket"
           @cancel="isDialogOpen = false"
-          @uploaded="handleUploaded"
         />
       </div>
     </DialogContent>

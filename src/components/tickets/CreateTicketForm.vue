@@ -53,7 +53,6 @@ const emit = defineEmits<{
   'update:images': [value: File[]]
   submit: []
   cancel: []
-  uploaded: [files: File[]]
 }>()
 
 const imagesModel = computed({
@@ -114,16 +113,9 @@ const imagesModel = computed({
       <Field class="gap-2">
         <FieldLabel for="images" class="font-medium text-slate-700"> Images </FieldLabel>
 
-        <UIImageUploader
-          v-model="imagesModel"
-          @uploaded="emit('uploaded', $event)"
-          :max-size="5"
-          :max-files="5"
-        />
+        <UIImageUploader v-model="imagesModel" multiple :max-size="5" :max-files="5" />
 
-        <div class="my-4">
-          <UIImagePreview v-model="imagesModel" multiple />
-        </div>
+        <UIImagePreview v-if="imagesModel.length" v-model="imagesModel" multiple class="mt-3" />
       </Field>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -69,6 +69,21 @@ export const ticketService = {
 
     // Automatically assign tickets created by CSRs to themselves
     const assigneeId = role === 'admin' ? user.id : null
+    let assigneeName: string | null = null
+
+    if (assigneeId) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', assigneeId)
+        .single()
+
+      if (profileError) {
+        throw new Error(`Failed to fetch assignee name: ${profileError.message}`)
+      }
+
+      assigneeName = profile.full_name ?? 'Unnamed CSR'
+    }
 
     const { data, error } = await supabase
       .from('tickets')
@@ -80,6 +95,7 @@ export const ticketService = {
         type: ticket.type,
         status: 'open',
         assignee_id: assigneeId,
+        assignee: assigneeName,
         user_id: user.id,
       })
       .select(ticketColumns)

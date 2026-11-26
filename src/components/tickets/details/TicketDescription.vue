@@ -61,10 +61,10 @@ defineExpose({
     <div v-if="!isEditing">
       <div
         v-if="description"
-        class="cursor-pointer rounded-md text-sm leading-7 transition hover:bg-slate-100"
+        class="cursor-pointer rounded-md text-sm leading-5 transition hover:bg-slate-100"
         @click="startEditing"
       >
-        <div class="ql-editor p-0" v-html="safeDescription" />
+        <div class="ql-editor p-0 text-sm leading-5" v-html="safeDescription" />
       </div>
 
       <p
@@ -101,5 +101,7 @@ defineExpose({
         </Button>
       </div>
     </div>
+
+    <slot />
   </section>
 </template>

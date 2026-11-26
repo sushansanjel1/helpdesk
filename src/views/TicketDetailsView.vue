@@ -9,7 +9,9 @@ import { useCsrs } from '@/composable/profile'
 import { getAvailableStatusActions } from '@/utils/ticketStatus'
 import TicketHeader from '@/components/tickets/details/TicketHeader.vue'
 import TicketDescription from '@/components/tickets/details/TicketDescription.vue'
+import TicketImageUpload from '@/components/tickets/details/TicketImageUpload.vue'
 import TicketDetailsSidebar from '@/components/tickets/details/TicketDetailsSidebar.vue'
+import { ticketAttachmentService, type TicketAttachment } from '@/services/ticketAttachmentService'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -44,6 +46,55 @@ const ticketId = computed(() => Number(route.params.id))
 
 //Find the corresponding ticket
 const ticket = computed(() => tickets.value.find((item) => item.id === ticketId.value))
+const attachments = ref<TicketAttachment[]>([])
+const isFetchingAttachments = ref(false)
+const attachmentError = ref<string | null>(null)
+const selectedAttachmentFiles = ref<File[]>([])
+const isUploadingAttachments = ref(false)
+const attachmentUploadError = ref<string | null>(null)
+
+const fetchAttachments = async (id: number) => {
+  isFetchingAttachments.value = true
+  attachmentError.value = null
+  attachments.value = []
+
+  try {
+    attachments.value = await ticketAttachmentService.getForTicket(id)
+  } catch (error: unknown) {
+    attachmentError.value =
+      error instanceof Error ? error.message : 'Failed to load ticket attachments.'
+  } finally {
+    isFetchingAttachments.value = false
+  }
+}
+
+const handleAttachmentUpload = async (files: File[]) => {
+  if (!ticket.value || isUploadingAttachments.value) return
+
+  isUploadingAttachments.value = true
+  attachmentUploadError.value = null
+
+  try {
+    await ticketAttachmentService.upload(ticket.value.id, files)
+    selectedAttachmentFiles.value = []
+    await fetchAttachments(ticket.value.id)
+  } catch (error: unknown) {
+    attachmentUploadError.value =
+      error instanceof Error ? error.message : 'Failed to upload ticket images.'
+  } finally {
+    isUploadingAttachments.value = false
+  }
+}
+
+watch(
+  ticketId,
+  (id) => {
+    if (Number.isInteger(id) && id > 0) {
+      fetchAttachments(id)
+    }
+  },
+  { immediate: true },
+)
 
 const selectedCsrId = ref('')
 
@@ -156,9 +207,9 @@ onMounted(() => {
       </div>
 
       <!-- Ticket details layout -->
-      <div v-else class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div v-else class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <!-- Main content -->
-        <div class="min-w-0">
+        <div class="min-w-0 space-y-8">
           <!-- Ticket header -->
           <TicketHeader :ticket="ticket" :is-saving="isUpdatingSubject" @save="handleSubjectSave" />
 
@@ -170,13 +221,21 @@ onMounted(() => {
             :description="ticket.description"
             :is-saving="isUpdatingDescription"
             @save="handleDescriptionSave"
-          />
-
-          <!-- Attachments and comments will be added here -->
+          >
+            <TicketImageUpload
+              v-model:files="selectedAttachmentFiles"
+              :attachments="attachments"
+              :is-loading="isFetchingAttachments"
+              :error="attachmentError"
+              :is-uploading="isUploadingAttachments"
+              :upload-error="attachmentUploadError"
+              @upload="handleAttachmentUpload"
+            />
+          </TicketDescription>
         </div>
 
         <!-- Right sidebar -->
-        <div class="min-w-0 lg:border-l lg:pl-7">
+        <div class="min-w-0">
           <TicketDetailsSidebar
             :ticket="ticket"
             :csrs="csrs"

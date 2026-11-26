@@ -63,7 +63,7 @@ const saveSubject = () => {
         ref="subjectInput"
         v-model="editedSubject"
         maxlength="150"
-        class="w-full rounded-md border border-input bg-background px-3 py-2 text-xl font-semibold tracking-tight text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-2xl"
+        class="w-full rounded-md border border-input bg-background px-3 py-2 text-xl leading-6 font-semibold tracking-tight text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         placeholder="Enter ticket subject"
         @keydown.enter.prevent="saveSubject"
         @keydown.esc="cancelEditing"
@@ -96,7 +96,7 @@ const saveSubject = () => {
 
     <p
       v-else
-      class="cursor-text rounded-md border border-transparent px-2 py-1 -mx-2 text-xl font-semibold tracking-tight text-foreground transition-colors hover:border-border hover:bg-muted/40 sm:text-2xl"
+      class="cursor-text -mx-2 rounded-md border border-transparent px-2 py-1 text-xl leading-6 font-semibold tracking-tight text-foreground transition-colors hover:border-border hover:bg-muted/40"
       title="Click to edit subject"
       @click="startEditing"
     >

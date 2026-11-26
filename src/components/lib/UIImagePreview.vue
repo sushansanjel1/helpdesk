@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { X } from 'lucide-vue-next'
 
 interface Props {
   multiple?: boolean
@@ -86,22 +87,11 @@ onBeforeUnmount(() => {
         <button
           v-if="!disabled"
           type="button"
-          aria-label="Remove image"
-          class="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white transition hover:bg-destructive sm:opacity-0 sm:group-hover:opacity-100"
+          :aria-label="`Remove ${preview.file.name}`"
+          class="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white transition hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           @click="removeImage(index)"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
+          <X class="size-4" aria-hidden="true" />
         </button>
 
         <!-- Filename -->

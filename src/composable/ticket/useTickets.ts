@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import type { CreateTicketInput, Ticket } from '@/types/ticket'
 import { ticketService } from '@/services/ticketService'
+import { ticketAttachmentService } from '@/services/ticketAttachmentService'
 
 export const useTickets = () => {
   const tickets = ref<Ticket[]>([])
@@ -60,7 +61,10 @@ export const useTickets = () => {
   }
 
   // Create ticket
-  const addTicket = async (ticket: CreateTicketInput): Promise<Ticket | null> => {
+  const addTicket = async (
+    ticket: CreateTicketInput,
+    images: File[] = [],
+  ): Promise<Ticket | null> => {
     isCreating.value = true
 
     try {
@@ -68,7 +72,20 @@ export const useTickets = () => {
 
       tickets.value.unshift(newTicket)
 
-      toast.success('Ticket created successfully!')
+      if (images.length > 0) {
+        try {
+          await ticketAttachmentService.upload(newTicket.id, images)
+          toast.success('Ticket and images created successfully!')
+        } catch (attachmentError: unknown) {
+          // Ticket creation is not transactional with attachment upload.
+          // Keep the created ticket in the UI and report the partial failure clearly.
+          toast.error(
+            `Ticket created, but the images could not be uploaded: ${getErrorMessage(attachmentError)}`,
+          )
+        }
+      } else {
+        toast.success('Ticket created successfully!')
+      }
 
       return newTicket
     } catch (err: unknown) {

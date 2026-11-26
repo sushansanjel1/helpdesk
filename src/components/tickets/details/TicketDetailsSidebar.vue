@@ -2,14 +2,7 @@
 import type { Ticket, TicketStatusAction } from '@/types/ticket'
 import type { CSRProfile } from '@/types/auth'
 import { TICKET_PRIORITIES } from '@/constants/ticket'
-import {
-  Button,
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '@/components/ui'
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -81,14 +74,6 @@ function handlePriorityChange(value: unknown) {
   }
 }
 
-const canSelfAssign = computed(
-  () =>
-    props.isAdmin &&
-    props.currentUserId !== null &&
-    props.ticket.assigneeId === null &&
-    props.ticket.userId === props.currentUserId,
-)
-
 const canEditPriority = computed(
   () =>
     props.isManager ||
@@ -111,10 +96,10 @@ function handleAssignmentSelection(value: unknown) {
 </script>
 
 <template>
-  <aside class="space-y-5">
+  <aside class="space-y-4 rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
     <!-- Status section -->
     <section
-      class="flex min-h-16 items-center rounded-lg p-4"
+      class="flex min-h-14 items-center rounded-lg p-3"
       :class="statusPanelStyles[ticket.status]"
     >
       <Select
@@ -167,12 +152,12 @@ function handleAssignmentSelection(value: unknown) {
     </section>
 
     <!-- Details section -->
-    <section class="space-y-6 rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
-      <h2 class="text-base font-semibold text-foreground">Details</h2>
+    <section class="space-y-5">
+      <h2 class="text-sm font-semibold text-foreground">Details</h2>
 
       <!-- Assignee -->
       <div class="space-y-2">
-        <p class="text-sm text-muted-foreground">Assignee</p>
+        <p class="text-xs text-muted-foreground">Assignee</p>
 
         <!-- Manager assignment -->
         <div v-if="isManager">
@@ -182,7 +167,7 @@ function handleAssignmentSelection(value: unknown) {
             @update:model-value="handleAssignmentSelection"
           >
             <SelectTrigger
-              class="h-auto w-full justify-start rounded-md border border-slate-300 bg-white px-2 py-1.5 text-base font-medium shadow-none transition-colors hover:border-slate-500 hover:bg-muted/50"
+              class="h-auto w-full justify-start rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium shadow-none transition-colors hover:border-slate-500 hover:bg-muted/50"
             >
               <SelectValue placeholder="Unassigned" />
             </SelectTrigger>
@@ -197,21 +182,11 @@ function handleAssignmentSelection(value: unknown) {
           </Select>
         </div>
 
-        <!-- CSR assignment controls -->
-        <div v-else-if="isAdmin" class="space-y-2">
+        <!-- CSR assignee display -->
+        <div v-else-if="isAdmin">
           <p class="text-sm font-medium text-foreground">
             {{ ticket.assignee ?? 'Unassigned' }}
           </p>
-
-          <Button
-            v-if="canSelfAssign"
-            size="sm"
-            variant="outline"
-            :disabled="isAssigning"
-            @click="emit('assign', currentUserId)"
-          >
-            Assign to me
-          </Button>
         </div>
 
         <!-- Customer / read-only view -->
@@ -222,7 +197,7 @@ function handleAssignmentSelection(value: unknown) {
 
       <!-- Priority -->
       <div class="space-y-2">
-        <p class="text-sm text-muted-foreground">Priority</p>
+        <p class="text-xs text-muted-foreground">Priority</p>
 
         <Select
           v-if="canEditPriority"
@@ -231,7 +206,7 @@ function handleAssignmentSelection(value: unknown) {
           @update:model-value="handlePriorityChange"
         >
           <SelectTrigger
-            class="h-auto w-full justify-start rounded-md border border-slate-300 bg-white px-2 py-1.5 text-base font-medium capitalize shadow-none transition-colors hover:border-slate-500 hover:bg-muted/50"
+            class="h-auto w-full justify-start rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium capitalize shadow-none transition-colors hover:border-slate-500 hover:bg-muted/50"
             :aria-label="isUpdatingPriority ? 'Updating priority' : 'Ticket priority'"
           >
             <SelectValue :placeholder="ticket.priority" />
@@ -247,25 +222,25 @@ function handleAssignmentSelection(value: unknown) {
           </SelectContent>
         </Select>
 
-        <p v-else class="text-base font-medium capitalize text-foreground">
+        <p v-else class="text-sm font-medium capitalize text-foreground">
           {{ ticket.priority }}
         </p>
       </div>
 
       <!-- Reporter -->
       <div class="space-y-2">
-        <p class="text-sm text-muted-foreground">Reporter</p>
+        <p class="text-xs text-muted-foreground">Reporter</p>
 
-        <p class="text-base font-medium text-foreground">
+        <p class="text-sm font-medium text-foreground">
           {{ isFetchingReporterName ? 'Loading...' : reporterName || '—' }}
         </p>
       </div>
 
       <!-- Ticket metadata -->
       <div class="space-y-2">
-        <p class="text-sm text-muted-foreground">Created</p>
+        <p class="text-xs text-muted-foreground">Created</p>
 
-        <p class="text-base font-medium text-foreground">
+        <p class="text-sm font-medium text-foreground">
           {{ new Date(ticket.createdAt).toLocaleDateString() }}
         </p>
       </div>
